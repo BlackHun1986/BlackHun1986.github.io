@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FFB703">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="참잘했어요">
+  <meta name="description" content="오늘의 할 일을 하고 별과 하트 스티커를 모아요">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>참 잘했어요!</title>
+  <style>
+    @font-face {
+      font-family: "Jua";
+      src: url("fonts/Jua.woff") format("woff");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Gothic A1";
+      src: url("fonts/GothicA1-Regular.woff") format("woff");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Gothic A1";
+      src: url("fonts/GothicA1-Bold.woff") format("woff");
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    :root {
+      --bg1: #FFF7E6;
+      --bg2: #FFE9F2;
+      --bg3: #E8F4FF;
+      --ink: #3C2A1E;
+      --ink-soft: #7A5C4A;
+      --card: #FFFFFF;
+      --accent: #FFB703;
+      --accent-dark: #E09A00;
+      --stamp: #E63946;
+      --stamp-soft: #FFE3E6;
+      --boy: #4D96FF;
+      --boy-soft: #E3F0FF;
+      --girl: #FF7EB3;
+      --girl-soft: #FFE6F1;
+      --mint: #22C27C;
+      --mint-soft: #D8F8E8;
+      --shadow: 0 10px 28px rgba(60, 42, 30, 0.12);
+      --shadow-sm: 0 4px 14px rgba(60, 42, 30, 0.1);
+      --radius: 24px;
+      --touch: 64px;
+      --header: 72px;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-l: env(safe-area-inset-left, 0px);
+      --safe-r: env(safe-area-inset-right, 0px);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; margin: 0; }
+    html { height: 100%; height: -webkit-fill-available; }
+    body {
+      font-family: "Gothic A1", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      background: var(--bg1);
+      min-height: 100%;
+      min-height: 100dvh;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    input, textarea { user-select: text; -webkit-user-select: text; font-family: inherit; }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    img { max-width: 100%; display: block; }
+    .display { font-family: "Jua", "Apple SD Gothic Neo", sans-serif; letter-spacing: 0.02em; }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at -2% -6%, rgba(255,183,3,.34) 0 90px, transparent 91px),
+        radial-gradient(circle at 104% -4%, rgba(255,126,179,.28) 0 80px, transparent 81px),
+        radial-gradient(circle at 96% 108%, rgba(77,150,255,.24) 0 100px, transparent 101px),
+        radial-gradient(circle at -4% 108%, rgba(34,194,124,.20) 0 86px, transparent 87px),
+        radial-gradient(circle at 50% 118%, rgba(255,183,3,.16) 0 200px, transparent 201px),
+        linear-gradient(165deg, var(--bg1) 0%, var(--bg2) 48%, var(--bg3) 100%);
+      pointer-events: none;
+    }
+
+    #app {
+      height: 100%;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      min-height: 0;
+      flex-direction: column;
+      padding: 16px 20px 20px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.active { display: flex; }
+
+    h1, h2, h3 { margin: 0; font-weight: 400; }
+    p { margin: 0; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: var(--touch);
+      padding: 0 28px;
+      border-radius: 999px;
+      font-size: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary {
+      background: linear-gradient(180deg, #FFD54A 0%, #FFB703 100%);
+      color: #4A3100;
+      font-family: "Jua", sans-serif;
+      font-size: 1.45rem;
+      box-shadow: 0 6px 0 #E09A00, var(--shadow-sm);
+    }
+    .btn-primary:active { box-shadow: 0 2px 0 #E09A00, var(--shadow-sm); transform: translateY(4px); }
+    .btn-secondary {
+      background: #fff;
+      color: var(--ink);
+      border: 3px solid #F0E0C8;
+      font-family: "Jua", sans-serif;
+      font-size: 1.25rem;
+    }
+    .btn-ghost {
+      background: transparent;
+      box-shadow: none;
+      color: var(--ink-soft);
+      font-size: 1.1rem;
+      min-height: 48px;
+    }
+    .btn-danger {
+      background: #fff;
+      color: var(--stamp);
+      border: 3px solid #F5C2C7;
+      font-family: "Jua", sans-serif;
+    }
+    .btn-mint {
+      background: linear-gradient(180deg, #4AE09A 0%, #22C27C 100%);
+      color: #fff;
+      font-family: "Jua", sans-serif;
+      font-size: 1.35rem;
+      box-shadow: 0 6px 0 #1A9A62, var(--shadow-sm);
+    }
+    .btn-mint:active { box-shadow: 0 2px 0 #1A9A62; transform: translateY(4px); }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+    .btn-block { width: 100%; max-width: 420px; }
+
+    .icon-btn {
+      width: 52px; height: 52px; border-radius: 16px;
+      background: #fff; box-shadow: var(--shadow-sm);
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .icon-btn:active { transform: scale(.95); }
+    .icon-btn svg { width: 26px; height: 26px; }
+
+    /* Welcome */
+    .welcome { align-items: center; justify-content: center; text-align: center; gap: 18px; }
+    .stamp {
+      width: min(280px, 70vw);
+      height: min(280px, 70vw);
+      border-radius: 50%;
+      border: 10px solid var(--stamp);
+      box-shadow: inset 0 0 0 6px var(--stamp), 0 12px 30px rgba(230,57,70,.2);
+      background: radial-gradient(circle at 40% 35%, #fff, #FFF1F2 70%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--stamp);
+      transform: rotate(-8deg);
+      animation: stampPop .7s cubic-bezier(.2,1.4,.3,1) both;
+      position: relative;
+    }
+    .stamp::before, .stamp::after {
+      content: "";
+      position: absolute;
+      border: 2px dashed rgba(230,57,70,.35);
+      border-radius: 50%;
+      inset: 18px;
+    }
+    .stamp::after { inset: 26px; }
+    .stamp .stamp-mark { font-size: clamp(1.85rem, 5.6vw, 2.55rem); line-height: 1.2; text-align: center; padding: 0 18px; }
+    .stamp-deco { position: absolute; width: 44px; height: 44px; z-index: 1; }
+    .stamp-deco.star { top: -6px; left: 8px; }
+    .stamp-deco.heart { top: -4px; right: 6px; }
+    .welcome h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); margin-top: 8px; }
+    .welcome .lead { font-size: 1.15rem; color: var(--ink-soft); max-width: 440px; line-height: 1.55; }
+
+    @keyframes stampPop {
+      0% { transform: scale(1.6) rotate(-20deg); opacity: 0; }
+      70% { transform: scale(.96) rotate(-6deg); opacity: 1; }
+      100% { transform: scale(1) rotate(-8deg); }
+    }
+
+    .step-kicker { font-size: 1rem; color: var(--ink-soft); margin-bottom: 6px; }
+    .screen-title { font-size: clamp(1.7rem, 4vw, 2.2rem); margin-bottom: 6px; }
+    .screen-desc { color: var(--ink-soft); font-size: 1.05rem; margin-bottom: 18px; line-height: 1.45; }
+    .center-col { max-width: 720px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+    /* Number picker */
+    .count-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 480px;
+      margin: 12px auto 0;
+    }
+    .count-btn, .choice-btn {
+      aspect-ratio: 1;
+      border-radius: 28px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      font-family: "Jua", sans-serif;
+      font-size: 2.8rem;
+      color: var(--ink);
+      border: 4px solid transparent;
+      transition: transform .12s, border-color .12s, background .12s;
+    }
+    .count-btn:active, .choice-btn:active { transform: scale(.96); }
+    .count-btn.selected, .choice-btn.selected {
+      border-color: var(--accent);
+      background: #FFF6D6;
+    }
+    .choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0 20px; }
+    .choice-btn { aspect-ratio: auto; min-height: 120px; font-size: 1.8rem; display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center; }
+    .choice-btn .emoji { font-size: 2.6rem; line-height: 1; }
+    .choice-btn.boy.selected { border-color: var(--boy); background: var(--boy-soft); }
+    .choice-btn.girl.selected { border-color: var(--girl); background: var(--girl-soft); }
+
+    .field-label { font-family: "Jua", sans-serif; font-size: 1.25rem; margin: 12px 0 8px; }
+    .text-input {
+      width: 100%;
+      min-height: 68px;
+      border: 4px solid #F0E0C8;
+      border-radius: 20px;
+      padding: 0 20px;
+      font-size: 1.4rem;
+      background: #fff;
+      outline: none;
+    }
+    .text-input:focus { border-color: var(--accent); }
+
+    /* Photo guide */
+    .photo-stage { flex: 1; display: flex; flex-direction: column; align-items: center; min-height: 0; }
+    .guide-circle {
+      width: min(280px, 58vw, 50vh);
+      height: min(280px, 58vw, 50vh);
+      border-radius: 50%;
+      border: 6px dashed #E0B84A;
+      background: rgba(255,255,255,.7);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+    }
+    .guide-circle.has-photo { border-style: solid; border-color: var(--mint); }
+    .guide-circle img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+    }
+    .face-hint {
+      position: absolute; inset: 12%;
+      display: flex; align-items: center; justify-content: center;
+      opacity: .35;
+    }
+    .face-hint svg { width: 70%; height: 70%; }
+    .tips {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      margin: 16px 0 8px; max-width: 560px;
+    }
+    .tip {
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 1rem;
+      box-shadow: var(--shadow-sm);
+      color: var(--ink);
+    }
+    .hidden-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+
+    /* Home */
+    .topbar {
+      display: flex; align-items: center; gap: 12px;
+      min-height: 56px; margin-bottom: 8px; flex-shrink: 0;
+      position: relative; z-index: 1;
+    }
+    .topbar .titles { flex: 1; min-width: 0; }
+    .topbar .titles h1 { font-size: clamp(1.5rem, 3.5vw, 2rem); }
+    .topbar .date { color: var(--ink-soft); font-size: 1rem; margin-top: 2px; }
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      padding: 8px 0 24px;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .home-grid.one { max-width: 460px; }
+    .child-card {
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 22px 20px 18px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; gap: 8px;
+      border: 4px solid transparent;
+      transition: transform .12s;
+    }
+    .child-card:active { transform: scale(.98); }
+    .child-card.boy { border-color: #D6E8FF; }
+    .child-card.girl { border-color: #FFD6E8; }
+    .avatar-wrap { position: relative; width: 132px; height: 132px; }
+    .avatar {
+      width: 132px; height: 132px; border-radius: 50%;
+      object-fit: cover; background: #F4EDE3;
+      box-shadow: 0 4px 0 rgba(0,0,0,.06);
+    }
+    .avatar.placeholder { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .progress-ring { position: absolute; inset: -8px; pointer-events: none; }
+    .progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .child-card .name { font-size: 1.7rem; margin-top: 4px; }
+    .progress-text { font-size: 1.15rem; color: var(--ink-soft); }
+    .progress-text strong { color: var(--ink); font-weight: 700; }
+    .bar { width: 100%; height: 14px; background: #F3E6D4; border-radius: 999px; overflow: hidden; margin-top: 4px; }
+    .bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #FFD54A, #22C27C); width: 0; transition: width .4s ease; }
+    .mini-stickers {
+      display: flex; gap: 4px; justify-content: center; align-items: center;
+      min-height: 36px; margin-top: 6px; flex-wrap: wrap;
+    }
+    .mini-stickers .sticker-icon { width: 28px; height: 28px; }
+    .got-today {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--stamp-soft); color: var(--stamp);
+      border-radius: 999px; padding: 6px 12px; font-family: "Jua", sans-serif; font-size: 1rem;
+    }
+
+    /* Child view */
+    .child-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+    .panel {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 16px 16px 18px;
+      min-height: 0;
+    }
+    .child-hero {
+      display: flex; align-items: center; gap: 14px;
+      background: #fff; border-radius: 24px; box-shadow: var(--shadow);
+      padding: 12px 16px; flex-shrink: 0; margin-bottom: 14px;
+    }
+    .child-hero .avatar, .child-hero .avatar-wrap { width: 76px; height: 76px; }
+    .child-hero .avatar-wrap { flex-shrink: 0; }
+    .child-hero .progress-ring { inset: -6px; }
+    .child-hero h2 { font-size: 1.7rem; }
+    .todo-panel { display: flex; flex-direction: column; }
+    .panel-title { font-size: 1.25rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sticker-panel .panel-title { flex-direction: column; align-items: stretch; gap: 4px; }
+    .cal-nav h2 { white-space: nowrap; text-align: center; flex: 1; font-size: 1.25rem; }
+    .sticker-count { text-align: center; }
+    .todo-list { display: flex; flex-direction: column; gap: 8px; overflow: auto; -webkit-overflow-scrolling: touch; padding: 2px 2px 18px; flex: 1; }
+    .todo-item {
+      display: flex; align-items: center; gap: 14px;
+      min-height: 64px;
+      padding: 10px 14px;
+      border-radius: 20px;
+      background: #FFF9F1;
+      border: 3px solid #F3E6D4;
+      text-align: left;
+      width: 100%;
+      font-size: 1.3rem;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .todo-item:active { transform: scale(.99); }
+    .todo-item.done { background: var(--mint-soft); border-color: #9EE6C2; }
+    .todo-item.done .todo-text { text-decoration: line-through; color: #3A7A5A; }
+    .todo-item.just-checked { animation: todoPop .45s ease; }
+    @keyframes todoPop {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    .checkbox {
+      width: 46px; height: 46px; flex-shrink: 0;
+      border-radius: 14px;
+      border: 4px solid #E0CBA8;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .todo-item.done .checkbox {
+      background: var(--mint);
+      border-color: var(--mint);
+      animation: checkBounce .35s ease;
+    }
+    @keyframes checkBounce {
+      0% { transform: scale(.6); }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    .checkbox svg { width: 28px; height: 28px; opacity: 0; }
+    .todo-item.done .checkbox svg { opacity: 1; }
+
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cal-nav h3 { font-size: 1.2rem; }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .cal-dow { text-align: center; font-size: .85rem; color: var(--ink-soft); padding: 4px 0; }
+    .cal-dow.sun, .cal-cell.sun .num { color: var(--stamp); }
+    .cal-dow.sat, .cal-cell.sat .num { color: var(--boy); }
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 14px;
+      background: #FFF9F1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: relative;
+      min-height: 44px;
+    }
+    .cal-cell.empty { background: transparent; }
+    .cal-cell .num { font-size: .8rem; color: var(--ink-soft); line-height: 1; }
+    .cal-cell.today { outline: 3px solid var(--accent); background: #FFF6D6; }
+    .cal-cell .sticker-icon { width: 58%; height: 58%; }
+    .sticker-count { font-size: .95rem; color: var(--ink-soft); }
+
+    .sticker-icon { display: inline-block; width: 32px; height: 32px; vertical-align: middle; }
+    .sticker-icon svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.15)); }
+
+    /* Settings */
+    .settings-wrap { max-width: 900px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
+    .settings-card h2 { font-size: 1.35rem; margin-bottom: 10px; }
+    .stepper { display: flex; align-items: center; gap: 12px; }
+    .stepper .val {
+      min-width: 72px; height: 64px; border-radius: 16px; background: #FFF6D6;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "Jua", sans-serif; font-size: 2rem;
+    }
+    .stepper .icon-btn { width: 64px; height: 64px; font-size: 2rem; font-family: "Jua", sans-serif; }
+    .toggle-row {
+      display: flex; background: #F4EDE3; border-radius: 16px; padding: 4px; gap: 4px;
+    }
+    .toggle-row button {
+      flex: 1; min-height: 52px; border-radius: 12px; font-family: "Jua", sans-serif; font-size: 1.05rem;
+    }
+    .toggle-row button.on { background: #fff; box-shadow: var(--shadow-sm); }
+    .todo-edit-item {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .todo-edit-item input { flex: 1; min-height: 52px; font-size: 1.1rem; border-radius: 14px; }
+    .todo-edit-item .icon-btn { width: 44px; height: 44px; border-radius: 12px; }
+    .child-edit-card {
+      display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;
+      padding: 12px 0; border-top: 2px solid #F3E6D4;
+    }
+    .child-edit-card:first-of-type { border-top: none; }
+    .child-edit-card .avatar, .child-edit-card .avatar-wrap { width: 72px; height: 72px; }
+    .tiny { font-size: .95rem; color: var(--ink-soft); line-height: 1.4; }
+
+    /* Overlays */
+    .overlay {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(40, 20, 20, .45);
+      display: none; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 28px; padding: 28px 24px 24px;
+      width: min(440px, 100%);
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    .modal h2 { font-size: 1.7rem; margin-bottom: 8px; }
+    .modal p { color: var(--ink-soft); font-size: 1.05rem; line-height: 1.45; }
+    .math-q { font-family: "Jua", sans-serif; font-size: 2.4rem; margin: 16px 0 12px; }
+    .celebrate-overlay { flex-direction: column; overflow: hidden; background: rgba(40, 16, 20, .58); }
+    .celebrate-overlay .modal {
+      background: rgba(45, 18, 22, .72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      color: #fff;
+      width: min(460px, 100%);
+    }
+    .celebrate-overlay .modal h2, .celebrate-overlay .modal p { color: #fff; }
+    .big-stamp {
+      width: min(260px, 70vw); height: min(260px, 70vw);
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      border: 10px solid #fff;
+      box-shadow: inset 0 0 0 6px #fff, 0 10px 30px rgba(0,0,0,.2);
+      background: var(--stamp);
+      color: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transform: rotate(-8deg);
+      animation: stampIn .65s cubic-bezier(.2,1.5,.3,1) both;
+    }
+    .big-stamp .t { font-size: clamp(2rem, 6vw, 2.6rem); line-height: 1.15; }
+    @keyframes stampIn {
+      0% { transform: scale(2.4) rotate(-24deg); opacity: 0; }
+      65% { transform: scale(.92) rotate(-4deg); opacity: 1; }
+      100% { transform: scale(1) rotate(-8deg); }
+    }
+    .award-sticker { width: 88px; height: 88px; margin: 8px auto 12px; animation: awardPop .7s .3s both; }
+    @keyframes awardPop {
+      0% { transform: scale(0) rotate(-40deg); opacity: 0; }
+      70% { transform: scale(1.15) rotate(8deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0); }
+    }
+    .confetti-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+    .confetti-piece {
+      position: absolute; top: -12px; width: 10px; height: 16px; border-radius: 2px;
+      animation: confettiFall 2.4s ease-in forwards;
+    }
+    .confetti-piece.dot { width: 10px; height: 10px; border-radius: 50%; }
+    @keyframes confettiFall {
+      0% { transform: translate3d(0, -8vh, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate3d(var(--dx), 105vh, 0) rotate(var(--rot)); opacity: .85; }
+    }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(24px + var(--safe-b));
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink); color: #fff; padding: 12px 20px;
+      border-radius: 999px; z-index: 80; opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s; font-size: 1.05rem;
+      max-width: 90%;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+    @media (orientation: landscape) and (min-width: 860px) {
+      .child-layout { grid-template-columns: 1.15fr .85fr; flex: 1; }
+      .todo-panel, .sticker-panel { max-height: 100%; overflow: auto; }
+      .todo-item { min-height: 56px; font-size: 1.2rem; }
+      .welcome .stamp { width: min(240px, 46vh); height: min(240px, 46vh); }
+      .guide-circle { width: min(250px, 46vh); height: min(250px, 46vh); }
+      .settings-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    }
+    @media (orientation: portrait) {
+      .count-grid { max-width: 420px; }
+    }
+    @media (orientation: portrait) and (max-width: 860px) {
+      .home-grid { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
+      .child-hero { flex-shrink: 0; }
+    }
+    @media (max-height: 700px) {
+      .stamp { width: min(200px, 50vh); height: min(200px, 50vh); }
+      .guide-circle { width: min(200px, 42vh); height: min(200px, 42vh); }
+    }
+  </style>
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true">
+    <defs>
+      <linearGradient id="gStar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FFE566"/>
+        <stop offset="55%" stop-color="#FFB703"/>
+        <stop offset="100%" stop-color="#F08C00"/>
+      </linearGradient>
+      <linearGradient id="gHeart" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FFB0C8"/>
+        <stop offset="50%" stop-color="#FF5D8F"/>
+        <stop offset="100%" stop-color="#E0235A"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div id="app">
+    <section class="screen welcome" id="screen-welcome">
+      <div class="stamp display">
+        <svg class="stamp-deco star" viewBox="0 0 64 64"><polygon points="32,4 40,24 62,24 44,38 51,58 32,46 13,58 20,38 2,24 24,24" fill="url(#gStar)"/></svg>
+        <svg class="stamp-deco heart" viewBox="0 0 64 64"><path fill="url(#gHeart)" d="M32 56C32 56 6 38 6 24C6 15 13 8 22 8C26.8 8 30.5 10.2 32 14.2C33.5 10.2 37.2 8 42 8C51 8 58 15 58 24C58 38 32 56 32 56Z"/></svg>
+        <span class="stamp-mark">참 잘<br>했어요!</span>
+      </div>
+      <h1 class="display">오늘의 할 일, 오늘의 스티커</h1>
+      <p class="lead">할 일을 마치고 별과 하트를 모아요.<br>태블릿에 올려 두고 집에서 함께 써 보세요.</p>
+      <button class="btn btn-primary btn-block display" data-action="start-onboarding" type="button">시작하기</button>
+    </section>
+
+    <section class="screen" id="screen-count">
+      <div class="center-col">
+        <p class="step-kicker">처음 설정 · 1단계</p>
+        <h1 class="screen-title display">아이가 몇 명인가요?</h1>
+        <p class="screen-desc">1명부터 6명까지 고를 수 있어요. 나중에 설정에서 바꿀 수 있습니다.</p>
+        <div class="count-grid" id="count-grid"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" data-action="show-welcome" type="button">뒤로</button>
+          <button class="btn btn-primary" data-action="confirm-count" type="button">다음</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-child-info">
+      <div class="center-col">
+        <p class="step-kicker" id="info-kicker">처음 설정 · 2단계</p>
+        <h1 class="screen-title display" id="info-title">아이 이름을 알려 주세요</h1>
+        <p class="screen-desc">이름과 성별을 정하면, 다음에 얼굴 사진을 찍을게요.</p>
+        <label class="field-label" for="child-name-input">이름</label>
+        <input class="text-input" id="child-name-input" type="text" maxlength="12" placeholder="예: 민준" autocomplete="off" enterkeyhint="done">
+        <p class="field-label">성별</p>
+        <div class="choice-row">
+          <button type="button" class="choice-btn boy" id="gender-boy" data-action="pick-gender" data-gender="boy"><span class="emoji">👦</span>남자</button>
+          <button type="button" class="choice-btn girl" id="gender-girl" data-action="pick-gender" data-gender="girl"><span class="emoji">👧</span>여자</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" data-action="info-back" type="button">뒤로</button>
+          <button class="btn btn-primary" data-action="info-next" type="button">다음</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-child-photo">
+      <div class="center-col">
+        <p class="step-kicker" id="photo-kicker">처음 설정 · 사진</p>
+        <h1 class="screen-title display" id="photo-title">얼굴을 찍어 주세요</h1>
+        <p class="screen-desc" id="photo-desc">밝은 곳에서 얼굴을 원 안에 가득, 정면으로 찍어 주세요.</p>
+        <div class="photo-stage">
+          <div class="guide-circle" id="guide-circle">
+            <div class="face-hint" id="face-hint">
+              <svg viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="38" r="16" stroke="#7A5C4A" stroke-width="3"/>
+                <path d="M22 86c4-20 14-28 28-28s24 8 28 28" stroke="#7A5C4A" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <img id="photo-preview" alt="미리보기" hidden>
+          </div>
+          <div class="tips">
+            <span class="tip">☀️ 밝은 곳에서</span>
+            <span class="tip">😊 얼굴을 원 안에 가득</span>
+            <span class="tip">🙂 정면으로 바라봐요</span>
+          </div>
+          <input class="hidden-file" id="photo-input" type="file" accept="image/*" capture="user">
+          <div class="btn-row" id="photo-actions"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-home">
+      <div class="topbar">
+        <div class="titles">
+          <h1 class="display">참 잘했어요!</h1>
+          <p class="date" id="home-date"></p>
+        </div>
+        <button class="icon-btn" data-action="open-settings" type="button" aria-label="설정">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3C2A1E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="home-grid" id="home-grid"></div>
+    </section>
+
+    <section class="screen" id="screen-child">
+      <div class="topbar">
+        <button class="icon-btn" data-action="go-home" type="button" aria-label="홈으로">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3C2A1E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
+        </button>
+        <div class="titles">
+          <h1 class="display" id="child-screen-title">오늘 할 일</h1>
+          <p class="date" id="child-screen-sub"></p>
+        </div>
+      </div>
+      <div class="child-hero" id="child-hero"></div>
+      <div class="child-layout">
+        <div class="panel todo-panel">
+          <div class="panel-title"><h2 class="display">오늘 할 일</h2><span class="tiny" id="todo-progress-label"></span></div>
+          <div class="todo-list" id="todo-list"></div>
+        </div>
+        <div class="panel sticker-panel">
+          <div class="panel-title">
+            <div class="cal-nav">
+              <button class="icon-btn" data-action="cal-prev" type="button" aria-label="이전 달">‹</button>
+              <h2 class="display" id="cal-title">스티커 판</h2>
+              <button class="icon-btn" data-action="cal-next" type="button" aria-label="다음 달">›</button>
+            </div>
+            <span class="sticker-count" id="sticker-count"></span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-settings">
+      <div class="topbar">
+        <button class="icon-btn" data-action="go-home" type="button" aria-label="홈으로">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3C2A1E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
+        </button>
+        <div class="titles">
+          <h1 class="display">설정</h1>
+          <p class="date">부모님만 바꿔 주세요</p>
+        </div>
+      </div>
+      <div class="settings-wrap" id="settings-wrap"></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="overlay-parent">
+    <div class="modal">
+      <h2 class="display">부모님인가요?</h2>
+      <p>설정을 바꾸려면 아래 문제를 풀어 주세요.</p>
+      <div class="math-q display" id="math-q">8 + 5 = ?</div>
+      <input class="text-input" id="math-input" type="number" inputmode="numeric" placeholder="정답" aria-label="정답">
+      <p class="tiny" id="math-error" style="color:var(--stamp);min-height:1.3em;margin-top:8px;"></p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" data-action="parent-cancel" type="button">취소</button>
+        <button class="btn btn-primary" data-action="parent-ok" type="button">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-confirm">
+    <div class="modal">
+      <h2 class="display" id="confirm-title">정말요?</h2>
+      <p id="confirm-msg"></p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" data-action="confirm-no" type="button">아니오</button>
+        <button class="btn btn-danger" id="confirm-yes" data-action="confirm-yes" type="button">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay celebrate-overlay" id="overlay-celebrate">
+    <div class="confetti-layer" id="confetti-layer"></div>
+    <div class="modal">
+      <div class="big-stamp display"><span class="t">참 잘했어요!</span></div>
+      <div class="award-sticker" id="award-sticker"></div>
+      <h2 class="display" id="celebrate-name"></h2>
+      <p id="celebrate-msg">오늘 할 일을 멋지게 해냈어요. 스티커를 붙여 줄게요!</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" data-action="celebrate-ok" type="button">좋아!</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-photo">
+    <div class="modal" style="width:min(480px,100%)">
+      <h2 class="display" id="overlay-photo-title">사진 바꾸기</h2>
+      <p class="screen-desc">밝은 곳에서, 얼굴을 원 안에 가득, 정면으로 찍어 주세요.</p>
+      <div class="guide-circle" id="overlay-guide-circle" style="margin:0 auto;">
+        <div class="face-hint" id="overlay-face-hint">
+          <svg viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="38" r="16" stroke="#7A5C4A" stroke-width="3"/>
+            <path d="M22 86c4-20 14-28 28-28s24 8 28 28" stroke="#7A5C4A" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <img id="overlay-photo-preview" alt="미리보기" hidden>
+      </div>
+      <input class="hidden-file" id="overlay-photo-input" type="file" accept="image/*" capture="user">
+      <div class="btn-row" id="overlay-photo-actions"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    const KEY = "chamjal-v1";
+    const DEFAULT_TODOS = [
+      { id: "todo_1", text: "양치하기" },
+      { id: "todo_2", text: "세수하기" },
+      { id: "todo_3", text: "옷 입기" },
+      { id: "todo_4", text: "밥 잘 먹기" },
+      { id: "todo_5", text: "숙제하기" },
+      { id: "todo_6", text: "책 읽기" },
+      { id: "todo_7", text: "장난감 정리" },
+      { id: "todo_8", text: "이불 정리" },
+      { id: "todo_9", text: "손 씻기" },
+      { id: "todo_10", text: "일찍 잠자기" }
+    ];
+
+    const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+    const STAR_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 40,24 62,24 44,38 51,58 32,46 13,58 20,38 2,24 24,24" fill="url(#gStar)" stroke="#E09A00" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+    const HEART_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true"><path fill="url(#gHeart)" stroke="#C41B4A" stroke-width="1.5" stroke-linejoin="round" d="M32 56C32 56 6 38 6 24C6 15 13 8 22 8C26.8 8 30.5 10.2 32 14.2C33.5 10.2 37.2 8 42 8C51 8 58 15 58 24C58 38 32 56 32 56Z"/></svg>';
+    const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>';
+
+    function defaultState() {
+      return {
+        version: 1,
+        onboardingComplete: false,
+        settings: {
+          threshold: 7,
+          sharedTodos: true,
+          defaultTodos: DEFAULT_TODOS.map(function (t) { return { id: t.id, text: t.text }; })
+        },
+        children: []
+      };
+    }
+
+    function uid(prefix) {
+      return (prefix || "id") + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function todayKey(d) {
+      d = d || new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + day;
+    }
+
+    function formatKoreanDate(d) {
+      d = d || new Date();
+      return d.getFullYear() + "년 " + (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + WEEKDAYS[d.getDay()] + "요일";
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return defaultState();
+        const data = JSON.parse(raw);
+        if (!data || typeof data !== "object") return defaultState();
+        const base = defaultState();
+        data.settings = Object.assign(base.settings, data.settings || {});
+        if (!Array.isArray(data.settings.defaultTodos) || !data.settings.defaultTodos.length) {
+          data.settings.defaultTodos = base.settings.defaultTodos;
+        }
+        data.children = Array.isArray(data.children) ? data.children : [];
+        data.children.forEach(function (c) {
+          c.stickers = Array.isArray(c.stickers) ? c.stickers : [];
+          c.days = c.days && typeof c.days === "object" ? c.days : {};
+        });
+        return data;
+      } catch (err) {
+        return defaultState();
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(db));
+        return true;
+      } catch (err) {
+        toast("저장 공간이 부족해요. 사진을 다시 찍어 보거나 일부 데이터를 지워 주세요.");
+        return false;
+      }
+    }
+
+    let db = load();
+
+    const ui = {
+      screen: db.onboardingComplete ? "home" : "welcome",
+      countPick: 2,
+      infoIndex: 0,
+      photoIndex: 0,
+      draftChildren: [],
+      draftGender: "boy",
+      draftPhoto: null,
+      selectedChildId: null,
+      calYear: new Date().getFullYear(),
+      calMonth: new Date().getMonth(),
+      photoTargetId: null,
+      mathA: 0,
+      mathB: 0,
+      confirmResolve: null,
+      settingsTodoChildId: null
+    };
+
+    function $(id) { return document.getElementById(id); }
+
+    function stickerIcon(type, cls) {
+      return '<span class="sticker-icon ' + (cls || "") + '">' + (type === "heart" ? HEART_SVG : STAR_SVG) + "</span>";
+    }
+
+    function stickerTypeFor(child) {
+      return child.gender === "girl" ? "heart" : "star";
+    }
+
+    function getTodos(child) {
+      if (!db.settings.sharedTodos && child && child.customTodos && child.customTodos.length) {
+        return child.customTodos;
+      }
+      return db.settings.defaultTodos;
+    }
+
+    function getTodayRecord(child) {
+      const key = todayKey();
+      child.days = child.days || {};
+      if (!child.days[key]) child.days[key] = { completedIds: [] };
+      return child.days[key];
+    }
+
+    function getProgress(child) {
+      const todos = getTodos(child);
+      const rec = getTodayRecord(child);
+      const set = new Set(rec.completedIds);
+      const done = todos.filter(function (t) { return set.has(t.id); }).length;
+      return { done: done, total: todos.length, completedIds: rec.completedIds, todos: todos };
+    }
+
+    function hasStickerOn(child, date) {
+      return (child.stickers || []).some(function (s) { return s.date === date; });
+    }
+
+    function hasStickerToday(child) {
+      return hasStickerOn(child, todayKey());
+    }
+
+    function awardIfNeeded(child, announce) {
+      const prog = getProgress(child);
+      const need = Math.max(1, db.settings.threshold | 0);
+      if (prog.done >= need && !hasStickerToday(child)) {
+        child.stickers = child.stickers || [];
+        child.stickers.push({ date: todayKey(), type: stickerTypeFor(child) });
+        save();
+        if (announce) showCelebration(child);
+        return true;
+      }
+      return false;
+    }
+
+    function findChild(id) {
+      return db.children.find(function (c) { return c.id === id; });
+    }
+
+    function placeholderAvatar(child, className) {
+      const isGirl = child.gender === "girl";
+      const bg = isGirl ? "#FFD6E8" : "#D6E8FF";
+      const fg = isGirl ? "#E04886" : "#2F74E0";
+      const initial = (child.name || "?").slice(0, 1);
+      return '<div class="avatar placeholder ' + (className || "") + '" style="background:' + bg + ';color:' + fg + '">' +
+        '<span class="display" style="font-size:1.6em">' + escapeHtml(initial) + "</span></div>";
+    }
+
+    function avatarHtml(child, className) {
+      if (child.photo) {
+        return '<img class="avatar ' + (className || "") + '" alt="' + escapeAttr(child.name) + '" src="' + child.photo + '">';
+      }
+      return placeholderAvatar(child, className);
+    }
+
+    function avatarWithRing(child, size) {
+      const prog = getProgress(child);
+      const r = 45;
+      const c = 2 * Math.PI * r;
+      const pct = prog.total ? prog.done / prog.total : 0;
+      const dash = (pct * c).toFixed(2);
+      const color = child.gender === "girl" ? "#FF7EB3" : "#4D96FF";
+      const progress = pct > 0.01
+        ? '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + dash + ' ' + c.toFixed(2) + '"/>'
+        : "";
+      return '<div class="avatar-wrap">' +
+        avatarHtml(child) +
+        '<div class="progress-ring" aria-hidden="true"><svg viewBox="0 0 100 100">' +
+        '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="#F3E6D4" stroke-width="7"/>' +
+        progress +
+        "</svg></div></div>";
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    function toast(msg) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(function () { el.classList.remove("show"); }, 2400);
+    }
+
+    function showScreen(name) {
+      ui.screen = name;
+      document.querySelectorAll(".screen").forEach(function (el) {
+        el.classList.toggle("active", el.id === "screen-" + name);
+      });
+      if (name === "home") renderHome();
+      if (name === "child") renderChildScreen();
+      if (name === "settings") renderSettings();
+      if (name === "count") renderCount();
+      if (name === "child-info") renderChildInfo();
+      if (name === "child-photo") renderChildPhoto();
+    }
+
+    function renderCount() {
+      const grid = $("count-grid");
+      grid.innerHTML = "";
+      for (let n = 1; n <= 6; n++) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "count-btn display" + (ui.countPick === n ? " selected" : "");
+        b.textContent = n;
+        b.setAttribute("data-action", "pick-count");
+        b.setAttribute("data-count", String(n));
+        grid.appendChild(b);
+      }
+    }
+
+    function renderChildInfo() {
+      const i = ui.infoIndex;
+      const total = ui.draftChildren.length;
+      const child = ui.draftChildren[i];
+      $("info-kicker").textContent = "처음 설정 · 아이 " + (i + 1) + " / " + total;
+      $("info-title").textContent = total > 1 ? (i + 1) + "번째 아이 이름과 성별" : "아이 이름과 성별";
+      $("child-name-input").value = child.name || "";
+      ui.draftGender = child.gender || "boy";
+      $("gender-boy").classList.toggle("selected", ui.draftGender === "boy");
+      $("gender-girl").classList.toggle("selected", ui.draftGender === "girl");
+      setTimeout(function () { $("child-name-input").focus(); }, 200);
+    }
+
+    function renderChildPhoto() {
+      const i = ui.photoIndex;
+      const total = ui.draftChildren.length;
+      const child = ui.draftChildren[i];
+      $("photo-kicker").textContent = "처음 설정 · 사진 " + (i + 1) + " / " + total;
+      $("photo-title").textContent = (child.name || "아이") + " 얼굴을 찍어 주세요";
+      $("photo-desc").textContent = "밝은 곳에서, 얼굴을 원 안에 가득, 정면으로 찍어 주세요.";
+      ui.draftPhoto = child.photo || null;
+      updatePhotoPreview("guide-circle", "photo-preview", "face-hint", ui.draftPhoto);
+      renderPhotoActions("photo-actions", false);
+    }
+
+    function updatePhotoPreview(circleId, imgId, hintId, dataUrl) {
+      const circle = $(circleId);
+      const img = $(imgId);
+      const hint = $(hintId);
+      if (dataUrl) {
+        img.src = dataUrl;
+        img.hidden = false;
+        if (hint) hint.hidden = true;
+        circle.classList.add("has-photo");
+      } else {
+        img.removeAttribute("src");
+        img.hidden = true;
+        if (hint) hint.hidden = false;
+        circle.classList.remove("has-photo");
+      }
+    }
+
+    function renderPhotoActions(containerId, isOverlay) {
+      const el = $(containerId);
+      const has = isOverlay ? ui.draftPhoto : ui.draftPhoto;
+      let html = "";
+      html += '<button class="btn btn-primary" data-action="' + (isOverlay ? "ov-pick-photo" : "pick-photo") + '" type="button">' + (has ? "다시 찍기" : "사진 찍기") + "</button>";
+      if (has) {
+        html += '<button class="btn btn-mint" data-action="' + (isOverlay ? "ov-keep-photo" : "keep-photo") + '" type="button">이 사진으로 할게요</button>';
+      }
+      html += '<button class="btn btn-ghost" data-action="' + (isOverlay ? "ov-skip-photo" : "skip-photo") + '" type="button">' + (isOverlay ? (has ? "닫기" : "취소") : "건너뛰기") + "</button>";
+      if (!isOverlay && !has) {
+        /* skip stays */
+      }
+      if (!isOverlay && has) {
+        /* replace last ghost with skip still available? keep 이 사진 + 다시 찍기, skip as well if they want */
+      }
+      el.innerHTML = html;
+    }
+
+    /* ---------- Image compression (center crop, ~300px, EXIF) ---------- */
+    function getExifOrientation(file) {
+      return new Promise(function (resolve) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          try {
+            const view = new DataView(reader.result);
+            if (view.getUint16(0, false) !== 0xFFD8) return resolve(1);
+            const length = view.byteLength;
+            let offset = 2;
+            while (offset < length) {
+              const marker = view.getUint16(offset, false);
+              offset += 2;
+              if (marker === 0xFFE1) {
+                if (view.getUint32(offset += 2, false) !== 0x45786966) return resolve(1);
+                const little = view.getUint16(offset += 6, false) === 0x4949;
+                offset += view.getUint32(offset + 4, little);
+                const tags = view.getUint16(offset, little);
+                offset += 2;
+                for (let i = 0; i < tags; i++) {
+                  if (view.getUint16(offset + i * 12, little) === 0x0112) {
+                    return resolve(view.getUint16(offset + i * 12 + 8, little));
+                  }
+                }
+              } else if ((marker & 0xFF00) !== 0xFF00) break;
+              else offset += view.getUint16(offset, false);
+            }
+          } catch (e) { /* ignore */ }
+          resolve(1);
+        };
+        reader.onerror = function () { resolve(1); };
+        reader.readAsArrayBuffer(file.slice(0, 64 * 1024));
+      });
+    }
+
+    function applyOrientation(ctx, w, h, ori) {
+      switch (ori) {
+        case 2: ctx.translate(w, 0); ctx.scale(-1, 1); break;
+        case 3: ctx.translate(w, h); ctx.rotate(Math.PI); break;
+        case 4: ctx.translate(0, h); ctx.scale(1, -1); break;
+        case 5: ctx.rotate(0.5 * Math.PI); ctx.scale(1, -1); break;
+        case 6: ctx.rotate(0.5 * Math.PI); ctx.translate(0, -h); break;
+        case 7: ctx.rotate(0.5 * Math.PI); ctx.translate(w, -h); ctx.scale(-1, 1); break;
+        case 8: ctx.rotate(-0.5 * Math.PI); ctx.translate(-w, 0); break;
+      }
+    }
+
+    function compressImage(file, maxSize, quality) {
+      maxSize = maxSize || 300;
+      quality = quality == null ? 0.82 : quality;
+      return getExifOrientation(file).then(function (ori) {
+        return new Promise(function (resolve, reject) {
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = function () {
+            try {
+              let w = img.naturalWidth;
+              let h = img.naturalHeight;
+              const swap = ori >= 5 && ori <= 8;
+              const vw = swap ? h : w;
+              const vh = swap ? w : h;
+              const side = Math.min(vw, vh);
+              const sx = (vw - side) / 2;
+              const sy = (vh - side) / 2;
+              const canvas = document.createElement("canvas");
+              canvas.width = maxSize;
+              canvas.height = maxSize;
+              const ctx = canvas.getContext("2d");
+              ctx.fillStyle = "#fff";
+              ctx.fillRect(0, 0, maxSize, maxSize);
+              ctx.save();
+              if (ori && ori !== 1) {
+                // Draw into an oriented temp canvas first, then crop.
+                const tmp = document.createElement("canvas");
+                tmp.width = vw;
+                tmp.height = vh;
+                const tctx = tmp.getContext("2d");
+                tctx.save();
+                applyOrientation(tctx, w, h, ori);
+                tctx.drawImage(img, 0, 0);
+                tctx.restore();
+                ctx.drawImage(tmp, sx, sy, side, side, 0, 0, maxSize, maxSize);
+              } else {
+                ctx.drawImage(img, sx, sy, side, side, 0, 0, maxSize, maxSize);
+              }
+              ctx.restore();
+              const data = canvas.toDataURL("image/jpeg", quality);
+              URL.revokeObjectURL(url);
+              resolve(data);
+            } catch (e) {
+              URL.revokeObjectURL(url);
+              reject(e);
+            }
+          };
+          img.onerror = function () {
+            URL.revokeObjectURL(url);
+            reject(new Error("이미지를 읽지 못했어요."));
+          };
+          img.src = url;
+        });
+      });
+    }
+
+    async function handlePhotoFile(file, isOverlay) {
+      if (!file) return;
+      try {
+        const data = await compressImage(file, 300, 0.82);
+        ui.draftPhoto = data;
+        if (isOverlay) {
+          updatePhotoPreview("overlay-guide-circle", "overlay-photo-preview", "overlay-face-hint", data);
+          renderPhotoActions("overlay-photo-actions", true);
+        } else {
+          updatePhotoPreview("guide-circle", "photo-preview", "face-hint", data);
+          renderPhotoActions("photo-actions", false);
+        }
+      } catch (e) {
+        toast("사진을 불러오지 못했어요. 다른 사진으로 해 주세요.");
+      }
+    }
+
+    /* ---------- Home / child ---------- */
+    function renderHome() {
+      $("home-date").textContent = "오늘 · " + formatKoreanDate();
+      const grid = $("home-grid");
+      grid.className = "home-grid" + (db.children.length === 1 ? " one" : "");
+      if (!db.children.length) {
+        grid.innerHTML = '<p class="tiny" style="text-align:center;padding:40px 0">아직 등록된 아이가 없어요. 설정에서 추가해 주세요.</p>';
+        return;
+      }
+      // Award quietly if threshold already met (e.g. after settings change)
+      db.children.forEach(function (c) { awardIfNeeded(c, false); });
+      grid.innerHTML = db.children.map(function (child) {
+        const prog = getProgress(child);
+        const need = Math.max(1, db.settings.threshold | 0);
+        const got = hasStickerToday(child);
+        const recent = (child.stickers || []).slice(-6);
+        let stickers = recent.map(function (s) { return stickerIcon(s.type); }).join("");
+        if (!recent.length) stickers = '<span class="tiny">아직 스티커가 없어요</span>';
+        const status = got
+          ? '<div class="got-today">' + stickerIcon(stickerTypeFor(child)) + " 오늘 스티커를 받았어요!</div>"
+          : (prog.done >= need
+            ? '<div class="tiny">스티커를 받을 준비가 됐어요</div>'
+            : '<div class="tiny">스티커까지 <strong>' + Math.max(0, need - prog.done) + "</strong>개 남았어요</div>");
+        const pct = prog.total ? Math.round(prog.done / prog.total * 100) : 0;
+        return '<button type="button" class="child-card ' + (child.gender === "girl" ? "girl" : "boy") + '" data-action="open-child" data-id="' + child.id + '">' +
+          avatarWithRing(child) +
+          '<h2 class="name display">' + escapeHtml(child.name || "아이") + "</h2>" +
+          '<p class="progress-text">오늘 <strong>' + prog.done + "</strong> / " + prog.total + " 했어요</p>" +
+          '<div class="bar"><span style="width:' + pct + '%"></span></div>' +
+          status +
+          '<div class="mini-stickers">' + stickers + "</div>" +
+          "</button>";
+      }).join("");
+    }
+
+    function renderChildScreen() {
+      const child = findChild(ui.selectedChildId);
+      if (!child) { showScreen("home"); return; }
+      const prog = getProgress(child);
+      const need = Math.max(1, db.settings.threshold | 0);
+      $("child-screen-title").textContent = child.name;
+      $("child-screen-sub").textContent = formatKoreanDate();
+      const remain = Math.max(0, need - prog.done);
+      const heroMsg = hasStickerToday(child)
+        ? "오늘 스티커를 이미 받았어요!"
+        : (remain === 0 ? "목표를 달성했어요!" : "스티커까지 " + remain + "개 남았어요");
+      $("child-hero").innerHTML = avatarWithRing(child) +
+        "<div style=\"flex:1;min-width:0\"><h2 class=\"display\">" + escapeHtml(child.name) + "의 오늘</h2>" +
+        '<p class="progress-text"><strong>' + prog.done + "</strong> / " + prog.total + " · " + heroMsg + "</p>" +
+        '<div class="bar"><span style="width:' + (prog.total ? Math.round(prog.done / prog.total * 100) : 0) + '%"></span></div></div>';
+      $("todo-progress-label").textContent = prog.done + " / " + prog.total;
+      const doneSet = new Set(prog.completedIds);
+      $("todo-list").innerHTML = prog.todos.map(function (t) {
+        const done = doneSet.has(t.id);
+        return '<button type="button" class="todo-item' + (done ? " done" : "") + '" data-action="toggle-todo" data-id="' + t.id + '">' +
+          '<span class="checkbox">' + CHECK_SVG + "</span>" +
+          '<span class="todo-text">' + escapeHtml(t.text) + "</span></button>";
+      }).join("") || '<p class="tiny">할 일이 없어요. 설정에서 목록을 만들어 주세요.</p>';
+      renderCalendar(child);
+    }
+
+    function renderCalendar(child) {
+      const y = ui.calYear;
+      const m = ui.calMonth;
+      $("cal-title").textContent = y + "년 " + (m + 1) + "월";
+      const totalStickers = (child.stickers || []).length;
+      $("sticker-count").textContent = "모은 스티커 " + totalStickers + "개";
+      const first = new Date(y, m, 1);
+      const startDow = first.getDay();
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const today = todayKey();
+      const map = {};
+      (child.stickers || []).forEach(function (s) { map[s.date] = s; });
+      let html = "";
+      WEEKDAYS.forEach(function (w, i) {
+        html += '<div class="cal-dow' + (i === 0 ? " sun" : i === 6 ? " sat" : "") + '">' + w + "</div>";
+      });
+      for (let i = 0; i < startDow; i++) html += '<div class="cal-cell empty"></div>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = todayKey(new Date(y, m, d));
+        const dow = new Date(y, m, d).getDay();
+        const sticker = map[date];
+        const isToday = date === today;
+        html += '<div class="cal-cell' + (isToday ? " today" : "") + (dow === 0 ? " sun" : dow === 6 ? " sat" : "") + '">' +
+          '<span class="num">' + d + "</span>" +
+          (sticker ? stickerIcon(sticker.type) : "") +
+          "</div>";
+      }
+      $("cal-grid").innerHTML = html;
+    }
+
+    function toggleTodo(todoId) {
+      const child = findChild(ui.selectedChildId);
+      if (!child) return;
+      const rec = getTodayRecord(child);
+      const i = rec.completedIds.indexOf(todoId);
+      const checking = i < 0;
+      if (checking) rec.completedIds.push(todoId);
+      else rec.completedIds.splice(i, 1);
+      save();
+      const awarded = checking && awardIfNeeded(child, true);
+      renderChildScreen();
+      if (checking && !awarded) {
+        const btn = document.querySelector('.todo-item[data-id="' + todoId + '"]');
+        if (btn) {
+          btn.classList.add("just-checked");
+          setTimeout(function () { btn.classList.remove("just-checked"); }, 500);
+        }
+      }
+    }
+
+    function showCelebration(child) {
+      const layer = $("confetti-layer");
+      layer.innerHTML = "";
+      const colors = ["#FFB703", "#FF6B6B", "#4D96FF", "#22C27C", "#C77DFF", "#FF8DC7", "#FFF176"];
+      for (let i = 0; i < 90; i++) {
+        const p = document.createElement("div");
+        p.className = "confetti-piece" + (i % 3 === 0 ? " dot" : "");
+        p.style.left = Math.random() * 100 + "%";
+        p.style.background = colors[i % colors.length];
+        p.style.animationDelay = (Math.random() * 0.5) + "s";
+        p.style.animationDuration = (2.1 + Math.random() * 1.2) + "s";
+        p.style.setProperty("--dx", (Math.random() * 240 - 120) + "px");
+        p.style.setProperty("--rot", (Math.random() * 720 - 360) + "deg");
+        layer.appendChild(p);
+      }
+      $("award-sticker").innerHTML = stickerIcon(stickerTypeFor(child));
+      $("award-sticker").querySelector(".sticker-icon").style.width = "88px";
+      $("award-sticker").querySelector(".sticker-icon").style.height = "88px";
+      $("celebrate-name").textContent = (child.name || "아이") + ", 참 잘했어요!";
+      $("overlay-celebrate").classList.add("show");
+    }
+
+    /* ---------- Settings ---------- */
+    function openParentGate() {
+      ui.mathA = 6 + Math.floor(Math.random() * 10);
+      ui.mathB = 5 + Math.floor(Math.random() * 10);
+      $("math-q").textContent = ui.mathA + " + " + ui.mathB + " = ?";
+      $("math-input").value = "";
+      $("math-error").textContent = "";
+      $("overlay-parent").classList.add("show");
+      setTimeout(function () { $("math-input").focus(); }, 200);
+    }
+
+    function renderSettings() {
+      const wrap = $("settings-wrap");
+      const th = db.settings.threshold | 0;
+      const shared = db.settings.sharedTodos;
+      const todosChild = (!shared && ui.settingsTodoChildId) ? findChild(ui.settingsTodoChildId) : null;
+      const editingList = (todosChild && todosChild.customTodos && todosChild.customTodos.length)
+        ? todosChild.customTodos
+        : db.settings.defaultTodos;
+
+      if (!shared && !ui.settingsTodoChildId && db.children[0]) {
+        ui.settingsTodoChildId = db.children[0].id;
+      }
+
+      let html = "";
+      html += '<div class="panel settings-card"><h2 class="display">스티커 목표</h2>';
+      html += '<p class="tiny" style="margin-bottom:12px">하루에 할 일을 몇 개 이상 해야 스티커를 받을까요? (하루 한 개)</p>';
+      html += '<div class="stepper">';
+      html += '<button class="icon-btn" data-action="threshold-dec" type="button" aria-label="줄이기">−</button>';
+      html += '<div class="val">' + th + "</div>";
+      html += '<button class="icon-btn" data-action="threshold-inc" type="button" aria-label="늘리기">+</button>';
+      html += "</div></div>";
+
+      html += '<div class="panel settings-card"><h2 class="display">할 일 목록</h2>';
+      html += '<div class="toggle-row" style="margin-bottom:12px">';
+      html += '<button type="button" class="' + (shared ? "on" : "") + '" data-action="todos-shared">모두 같은 목록</button>';
+      html += '<button type="button" class="' + (!shared ? "on" : "") + '" data-action="todos-per-child">아이마다 다른 목록</button>';
+      html += "</div>";
+      if (!shared) {
+        html += '<div class="toggle-row" style="margin-bottom:12px">';
+        db.children.forEach(function (c) {
+          html += '<button type="button" class="' + (ui.settingsTodoChildId === c.id ? "on" : "") + '" data-action="todos-child" data-id="' + c.id + '">' + escapeHtml(c.name) + "</button>";
+        });
+        html += "</div>";
+      }
+      html += '<div id="todo-editor">';
+      editingList.forEach(function (t, idx) {
+        html += '<div class="todo-edit-item">';
+        html += '<input class="text-input" data-todo-edit="' + idx + '" value="' + escapeAttr(t.text) + '" maxlength="24">';
+        html += '<button class="icon-btn" data-action="todo-up" data-idx="' + idx + '" type="button" aria-label="위로">▲</button>';
+        html += '<button class="icon-btn" data-action="todo-down" data-idx="' + idx + '" type="button" aria-label="아래로">▼</button>';
+        html += '<button class="icon-btn" data-action="todo-del" data-idx="' + idx + '" type="button" aria-label="삭제">✕</button>';
+        html += "</div>";
+      });
+      html += "</div>";
+      html += '<div class="btn-row" style="justify-content:flex-start">';
+      html += '<button class="btn btn-secondary" data-action="todo-add" type="button">할 일 추가</button>';
+      html += "</div></div>";
+
+      html += '<div class="panel settings-card"><h2 class="display">아이들</h2>';
+      db.children.forEach(function (c) {
+        html += '<div class="child-edit-card">';
+        html += '<button type="button" data-action="edit-photo" data-id="' + c.id + '" title="사진 바꾸기" style="border:none;background:none;padding:0">' + avatarHtml(c) + "</button>";
+        html += "<div>";
+        html += '<input class="text-input" data-child-name="' + c.id + '" value="' + escapeAttr(c.name) + '" maxlength="12" style="min-height:52px;font-size:1.15rem">';
+        html += '<div class="choice-row" style="margin:8px 0 0;gap:8px">';
+        html += '<button type="button" class="choice-btn boy' + (c.gender === "boy" ? " selected" : "") + '" data-action="edit-gender" data-id="' + c.id + '" data-gender="boy" style="min-height:56px;font-size:1.1rem"><span class="emoji">👦</span>남자</button>';
+        html += '<button type="button" class="choice-btn girl' + (c.gender === "girl" ? " selected" : "") + '" data-action="edit-gender" data-id="' + c.id + '" data-gender="girl" style="min-height:56px;font-size:1.1rem"><span class="emoji">👧</span>여자</button>';
+        html += "</div>";
+        html += '<div class="btn-row" style="justify-content:flex-start;margin-top:8px">';
+        html += '<button class="btn btn-secondary" data-action="edit-photo" data-id="' + c.id + '" type="button" style="min-height:48px">사진 바꾸기</button>';
+        html += '<button class="btn btn-danger" data-action="remove-child" data-id="' + c.id + '" type="button" style="min-height:48px">삭제</button>';
+        html += "</div></div></div>";
+      });
+      if (db.children.length < 6) {
+        html += '<div class="btn-row" style="justify-content:flex-start"><button class="btn btn-secondary" data-action="add-child" type="button">아이 추가</button></div>';
+      }
+      html += "</div>";
+
+      html += '<div class="panel settings-card"><h2 class="display">데이터</h2>';
+      html += '<p class="tiny" style="margin-bottom:12px">모든 아이 정보, 할 일, 사진, 스티커가 이 기기에서 삭제되고 처음 설정으로 돌아갑니다.</p>';
+      html += '<button class="btn btn-danger" data-action="reset-all" type="button">모든 데이터 초기화</button></div>';
+      wrap.innerHTML = html;
+    }
+
+    function currentTodoList() {
+      if (!db.settings.sharedTodos) {
+        const child = findChild(ui.settingsTodoChildId) || db.children[0];
+        if (child) {
+          if (!child.customTodos || !child.customTodos.length) {
+            child.customTodos = db.settings.defaultTodos.map(function (t) { return { id: t.id, text: t.text }; });
+          }
+          return child.customTodos;
+        }
+      }
+      return db.settings.defaultTodos;
+    }
+
+    function askConfirm(title, message, okText) {
+      return new Promise(function (resolve) {
+        $("confirm-title").textContent = title;
+        $("confirm-msg").textContent = message;
+        $("confirm-yes").textContent = okText || "확인";
+        ui.confirmResolve = resolve;
+        $("overlay-confirm").classList.add("show");
+      });
+    }
+
+    function closeConfirm(val) {
+      $("overlay-confirm").classList.remove("show");
+      const r = ui.confirmResolve;
+      ui.confirmResolve = null;
+      if (r) r(val);
+    }
+
+    function openPhotoOverlay(childId) {
+      const child = findChild(childId);
+      if (!child) return;
+      ui.photoTargetId = childId;
+      ui.draftPhoto = child.photo || null;
+      $("overlay-photo-title").textContent = (child.name || "아이") + " 사진 바꾸기";
+      updatePhotoPreview("overlay-guide-circle", "overlay-photo-preview", "overlay-face-hint", ui.draftPhoto);
+      renderPhotoActions("overlay-photo-actions", true);
+      $("overlay-photo").classList.add("show");
+    }
+
+    /* ---------- Onboarding helpers ---------- */
+    function startOnboarding() {
+      ui.countPick = Math.min(6, Math.max(1, db.children.length || 2));
+      showScreen("count");
+    }
+
+    function confirmCount() {
+      const n = ui.countPick;
+      ui.draftChildren = [];
+      for (let i = 0; i < n; i++) {
+        const existing = db.children[i];
+        ui.draftChildren.push({
+          id: existing ? existing.id : uid("child"),
+          name: existing ? existing.name : "",
+          gender: existing ? existing.gender : "boy",
+          photo: existing ? existing.photo : null,
+          stickers: existing ? existing.stickers : [],
+          days: existing ? existing.days : {},
+          customTodos: existing ? existing.customTodos : null
+        });
+      }
+      ui.infoIndex = 0;
+      showScreen("child-info");
+    }
+
+    function commitInfoAndNext() {
+      const name = $("child-name-input").value.trim();
+      if (!name) {
+        toast("이름을 입력해 주세요.");
+        $("child-name-input").focus();
+        return;
+      }
+      const child = ui.draftChildren[ui.infoIndex];
+      child.name = name;
+      child.gender = ui.draftGender || "boy";
+      if (ui.infoIndex < ui.draftChildren.length - 1) {
+        ui.infoIndex += 1;
+        renderChildInfo();
+      } else {
+        ui.photoIndex = 0;
+        showScreen("child-photo");
+      }
+    }
+
+    function finishOnboarding() {
+      db.children = ui.draftChildren.map(function (c) {
+        return {
+          id: c.id,
+          name: c.name,
+          gender: c.gender,
+          photo: c.photo || null,
+          stickers: c.stickers || [],
+          days: c.days || {},
+          customTodos: c.customTodos || null
+        };
+      });
+      db.onboardingComplete = true;
+      save();
+      showScreen("home");
+    }
+
+    function keepOrSkipPhoto(skip) {
+      const child = ui.draftChildren[ui.photoIndex];
+      child.photo = skip ? child.photo : (ui.draftPhoto || child.photo || null);
+      if (skip) {
+        // if they had a new draft and chose 건너뛰기 without a photo, leave as was / null
+        if (!child.photo) child.photo = null;
+      } else {
+        child.photo = ui.draftPhoto || null;
+      }
+      if (ui.photoIndex < ui.draftChildren.length - 1) {
+        ui.photoIndex += 1;
+        renderChildPhoto();
+      } else {
+        finishOnboarding();
+      }
+    }
+
+    /* ---------- Events ---------- */
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-action]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-action");
+
+      if (action === "start-onboarding") startOnboarding();
+      else if (action === "show-welcome") showScreen("welcome");
+      else if (action === "pick-count") {
+        ui.countPick = parseInt(btn.getAttribute("data-count"), 10);
+        renderCount();
+      }
+      else if (action === "confirm-count") confirmCount();
+      else if (action === "pick-gender") {
+        ui.draftGender = btn.getAttribute("data-gender");
+        $("gender-boy").classList.toggle("selected", ui.draftGender === "boy");
+        $("gender-girl").classList.toggle("selected", ui.draftGender === "girl");
+      }
+      else if (action === "info-back") {
+        const name = $("child-name-input").value.trim();
+        ui.draftChildren[ui.infoIndex].name = name;
+        ui.draftChildren[ui.infoIndex].gender = ui.draftGender;
+        if (ui.infoIndex === 0) showScreen("count");
+        else { ui.infoIndex -= 1; renderChildInfo(); }
+      }
+      else if (action === "info-next") commitInfoAndNext();
+      else if (action === "pick-photo") $("photo-input").click();
+      else if (action === "keep-photo") keepOrSkipPhoto(false);
+      else if (action === "skip-photo") keepOrSkipPhoto(true);
+      else if (action === "go-home") showScreen("home");
+      else if (action === "open-child") {
+        ui.selectedChildId = btn.getAttribute("data-id");
+        const now = new Date();
+        ui.calYear = now.getFullYear();
+        ui.calMonth = now.getMonth();
+        showScreen("child");
+      }
+      else if (action === "toggle-todo") toggleTodo(btn.getAttribute("data-id"));
+      else if (action === "cal-prev") {
+        ui.calMonth -= 1;
+        if (ui.calMonth < 0) { ui.calMonth = 11; ui.calYear -= 1; }
+        const child = findChild(ui.selectedChildId);
+        if (child) renderCalendar(child);
+      }
+      else if (action === "cal-next") {
+        ui.calMonth += 1;
+        if (ui.calMonth > 11) { ui.calMonth = 0; ui.calYear += 1; }
+        const child = findChild(ui.selectedChildId);
+        if (child) renderCalendar(child);
+      }
+      else if (action === "open-settings") openParentGate();
+      else if (action === "parent-cancel") $("overlay-parent").classList.remove("show");
+      else if (action === "parent-ok") {
+        const ans = parseInt($("math-input").value, 10);
+        if (ans === ui.mathA + ui.mathB) {
+          $("overlay-parent").classList.remove("show");
+          showScreen("settings");
+        } else {
+          $("math-error").textContent = "다시 생각해 보세요!";
+          $("math-input").value = "";
+          $("math-input").focus();
+        }
+      }
+      else if (action === "celebrate-ok") {
+        $("overlay-celebrate").classList.remove("show");
+        $("confetti-layer").innerHTML = "";
+        if (ui.screen === "child") renderChildScreen();
+        else renderHome();
+      }
+      else if (action === "confirm-no") closeConfirm(false);
+      else if (action === "confirm-yes") closeConfirm(true);
+      else if (action === "threshold-dec") {
+        db.settings.threshold = Math.max(1, (db.settings.threshold | 0) - 1);
+        save(); renderSettings();
+      }
+      else if (action === "threshold-inc") {
+        const list = db.settings.defaultTodos;
+        const cap = Math.max(1, list.length || 10);
+        db.settings.threshold = Math.min(cap, (db.settings.threshold | 0) + 1);
+        save(); renderSettings();
+      }
+      else if (action === "todos-shared") {
+        db.settings.sharedTodos = true;
+        save(); renderSettings();
+      }
+      else if (action === "todos-per-child") {
+        db.settings.sharedTodos = false;
+        if (!ui.settingsTodoChildId && db.children[0]) ui.settingsTodoChildId = db.children[0].id;
+        const c = findChild(ui.settingsTodoChildId);
+        if (c && (!c.customTodos || !c.customTodos.length)) {
+          c.customTodos = db.settings.defaultTodos.map(function (t) { return { id: t.id, text: t.text }; });
+        }
+        save(); renderSettings();
+      }
+      else if (action === "todos-child") {
+        ui.settingsTodoChildId = btn.getAttribute("data-id");
+        const c = findChild(ui.settingsTodoChildId);
+        if (c && (!c.customTodos || !c.customTodos.length)) {
+          c.customTodos = db.settings.defaultTodos.map(function (t) { return { id: t.id, text: t.text }; });
+          save();
+        }
+        renderSettings();
+      }
+      else if (action === "todo-up" || action === "todo-down" || action === "todo-del" || action === "todo-add") {
+        const list = currentTodoList();
+        const idx = parseInt(btn.getAttribute("data-idx"), 10);
+        if (action === "todo-up" && idx > 0) {
+          const tmp = list[idx - 1]; list[idx - 1] = list[idx]; list[idx] = tmp;
+        } else if (action === "todo-down" && idx < list.length - 1) {
+          const tmp = list[idx + 1]; list[idx + 1] = list[idx]; list[idx] = tmp;
+        } else if (action === "todo-del") {
+          if (list.length <= 1) { toast("할 일은 하나 이상 있어야 해요."); return; }
+          list.splice(idx, 1);
+        } else if (action === "todo-add") {
+          list.push({ id: uid("todo"), text: "새 할 일" });
+        }
+        save(); renderSettings();
+      }
+      else if (action === "edit-gender") {
+        const c = findChild(btn.getAttribute("data-id"));
+        if (c) { c.gender = btn.getAttribute("data-gender"); save(); renderSettings(); }
+      }
+      else if (action === "edit-photo") openPhotoOverlay(btn.getAttribute("data-id"));
+      else if (action === "ov-pick-photo") $("overlay-photo-input").click();
+      else if (action === "ov-keep-photo") {
+        const c = findChild(ui.photoTargetId);
+        if (c) { c.photo = ui.draftPhoto; save(); }
+        $("overlay-photo").classList.remove("show");
+        renderSettings();
+      }
+      else if (action === "ov-skip-photo") {
+        $("overlay-photo").classList.remove("show");
+      }
+      else if (action === "remove-child") {
+        const id = btn.getAttribute("data-id");
+        if (db.children.length <= 1) { toast("아이는 한 명 이상 있어야 해요."); return; }
+        const c = findChild(id);
+        askConfirm("이 아이를 삭제할까요?", (c && c.name ? c.name + "의 " : "") + "사진과 스티커가 함께 삭제됩니다.", "삭제").then(function (ok) {
+          if (!ok) return;
+          db.children = db.children.filter(function (x) { return x.id !== id; });
+          save();
+          renderSettings();
+        });
+      }
+      else if (action === "add-child") {
+        if (db.children.length >= 6) return;
+        db.children.push({
+          id: uid("child"),
+          name: "새 아이",
+          gender: "boy",
+          photo: null,
+          stickers: [],
+          days: {},
+          customTodos: null
+        });
+        save();
+        renderSettings();
+        toast("아이를 추가했어요. 이름과 사진을 바꿔 주세요.");
+      }
+      else if (action === "reset-all") {
+        askConfirm("모든 데이터를 지울까요?", "아이 정보, 사진, 할 일, 스티커가 모두 사라지고 처음 설정으로 돌아갑니다. 되돌릴 수 없어요.", "모두 지우기").then(function (ok) {
+          if (!ok) return;
+          db = defaultState();
+          try { localStorage.removeItem(KEY); } catch (err) {}
+          showScreen("welcome");
+          toast("처음부터 다시 시작합니다.");
+        });
+      }
+    });
+
+    document.addEventListener("change", function (e) {
+      if (e.target.id === "photo-input" && e.target.files && e.target.files[0]) {
+        handlePhotoFile(e.target.files[0], false);
+        e.target.value = "";
+      }
+      if (e.target.id === "overlay-photo-input" && e.target.files && e.target.files[0]) {
+        handlePhotoFile(e.target.files[0], true);
+        e.target.value = "";
+      }
+    });
+
+    document.addEventListener("input", function (e) {
+      if (e.target.matches("[data-todo-edit]")) {
+        const list = currentTodoList();
+        const idx = parseInt(e.target.getAttribute("data-todo-edit"), 10);
+        if (list[idx]) {
+          const v = e.target.value.trim();
+          list[idx].text = v || list[idx].text;
+          save();
+        }
+      }
+      if (e.target.matches("[data-child-name]")) {
+        const c = findChild(e.target.getAttribute("data-child-name"));
+        if (c) {
+          const v = e.target.value.trim();
+          if (v) { c.name = v; save(); }
+        }
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        if (ui.screen === "child-info" && document.activeElement && document.activeElement.id === "child-name-input") {
+          e.preventDefault();
+          commitInfoAndNext();
+        }
+        if ($("overlay-parent").classList.contains("show") && document.activeElement && document.activeElement.id === "math-input") {
+          e.preventDefault();
+          document.querySelector('[data-action="parent-ok"]').click();
+        }
+      }
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js").catch(function () { /* file:// 등에서는 무시 */ });
+      });
+    }
+
+    // Boot
+    if (db.onboardingComplete && db.children.length) showScreen("home");
+    else showScreen("welcome");
+  })();
+  </script>
+</body>
+</html>
