@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="참잘했어요">
-  <meta name="description" content="오늘의 할 일을 하고 별과 하트 스티커를 모아요">
+  <meta name="description" content="오늘의 할 일을 하고 별, 하트, 동물 스티커를 모아요">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -71,6 +71,7 @@
       min-height: 100%;
       min-height: 100dvh;
       overflow: hidden;
+      word-break: keep-all;
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
@@ -451,11 +452,52 @@
     .cal-cell.empty { background: transparent; }
     .cal-cell .num { font-size: .8rem; color: var(--ink-soft); line-height: 1; }
     .cal-cell.today { outline: 3px solid var(--accent); background: #FFF6D6; }
-    .cal-cell .sticker-icon { width: 58%; height: 58%; }
+    .cal-cell .sticker-icon { width: 48%; height: 48%; }
+    .cal-cell .sticker-label {
+      font-family: "Jua", sans-serif;
+      font-size: .58rem;
+      line-height: 1;
+      color: var(--ink);
+      letter-spacing: -0.03em;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 1px;
+    }
     .sticker-count { font-size: .95rem; color: var(--ink-soft); }
 
     .sticker-icon { display: inline-block; width: 32px; height: 32px; vertical-align: middle; }
     .sticker-icon svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.15)); }
+    .award-sticker-name {
+      font-size: 1.4rem;
+      margin: -2px 0 10px;
+      color: #fff;
+    }
+    .sticker-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 6px;
+      margin-top: 12px;
+      justify-content: flex-start;
+    }
+    .sticker-gallery-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 58px;
+      gap: 2px;
+    }
+    .sticker-gallery-item .sticker-icon { width: 44px; height: 44px; }
+    .sticker-gallery-item .lab {
+      font-size: .75rem;
+      color: var(--ink-soft);
+      font-family: "Jua", sans-serif;
+      line-height: 1.1;
+    }
+    .child-sticker-mode { margin-top: 8px; }
+    .child-sticker-mode .tiny { margin-bottom: 4px; }
+    .toggle-row.compact button { font-size: .95rem; min-height: 46px; padding: 0 6px; }
 
     /* Settings */
     .settings-wrap { max-width: 900px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
@@ -760,6 +802,7 @@
     <div class="modal">
       <div class="big-stamp display"><span class="t">참 잘했어요!</span></div>
       <div class="award-sticker" id="award-sticker"></div>
+      <p class="award-sticker-name display" id="award-sticker-name"></p>
       <h2 class="display" id="celebrate-name"></h2>
       <p id="celebrate-msg">오늘 할 일을 멋지게 해냈어요. 스티커를 붙여 줄게요!</p>
       <div class="btn-row">
@@ -812,6 +855,68 @@
     const HEART_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true"><path fill="url(#gHeart)" stroke="#C41B4A" stroke-width="1.5" stroke-linejoin="round" d="M32 56C32 56 6 38 6 24C6 15 13 8 22 8C26.8 8 30.5 10.2 32 14.2C33.5 10.2 37.2 8 42 8C51 8 58 15 58 24C58 38 32 56 32 56Z"/></svg>';
     const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>';
 
+    const ANIMALS = [
+      { id: 'dog', name: '강아지', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFE6B0" stroke="#D4A024" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><ellipse cx="15" cy="28" rx="8.5" ry="12.5" fill="#C9844A" transform="rotate(-28 15 28)"/><ellipse cx="49" cy="28" rx="8.5" ry="12.5" fill="#C9844A" transform="rotate(28 49 28)"/><ellipse cx="15.2" cy="28.5" rx="4.6" ry="7.4" fill="#F3C29A" transform="rotate(-28 15.2 28.5)"/><ellipse cx="48.8" cy="28.5" rx="4.6" ry="7.4" fill="#F3C29A" transform="rotate(28 48.8 28.5)"/><circle cx="32" cy="35" r="17.2" fill="#F6D7A3"/><ellipse cx="32" cy="41.2" rx="10.2" ry="7.2" fill="#FFF6E8"/><ellipse cx="32" cy="37.4" rx="3.3" ry="2.4" fill="#5A3A2A"/><path d="M32 39.6 v3.2" stroke="#5A3A2A" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="24.6" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.4" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.65" cy="31.05" r="1.15" fill="#fff"/><circle cx="40.45" cy="31.05" r="1.15" fill="#fff"/><ellipse cx="19.8" cy="38.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44.2" cy="38.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M27.8 44.2 Q32 47.8 36.2 44.2" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'cat', name: '고양이', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFD4A8" stroke="#E08A3A" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><path d="M14 30 L16 13 L27 24 Z" fill="#FFB15A"/><path d="M50 30 L48 13 L37 24 Z" fill="#FFB15A"/><path d="M17.2 27 L18 16.6 L25.2 24.2 Z" fill="#FFD0C0"/><path d="M46.8 27 L46 16.6 L38.8 24.2 Z" fill="#FFD0C0"/><circle cx="32" cy="36" r="16.6" fill="#FFB15A"/><path d="M24 20.5 q4 3.5 0 7" fill="none" stroke="#E08A3A" stroke-width="1.4" stroke-linecap="round"/><path d="M32 19.5 v6.5" fill="none" stroke="#E08A3A" stroke-width="1.4" stroke-linecap="round"/><path d="M40 20.5 q-4 3.5 0 7" fill="none" stroke="#E08A3A" stroke-width="1.4" stroke-linecap="round"/><path d="M29.6 38.6 L32 41.2 L34.4 38.6 Z" fill="#E8899A"/><path d="M14 39.5 h8.5" stroke="#C9753A" stroke-width="1.1" stroke-linecap="round"/><path d="M14.6 42.5 h8" stroke="#C9753A" stroke-width="1.1" stroke-linecap="round"/><path d="M41.5 39.5 h8.5" stroke="#C9753A" stroke-width="1.1" stroke-linecap="round"/><path d="M41.4 42.5 h8" stroke="#C9753A" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="24.4" cy="32.6" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.6" cy="32.6" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.45" cy="31.45" r="1.15" fill="#fff"/><circle cx="40.65" cy="31.45" r="1.15" fill="#fff"/><ellipse cx="19.6" cy="38.8" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44.4" cy="38.8" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28 44.6 Q32 48.2 36 44.6" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'rabbit', name: '토끼', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFE6F0" stroke="#E8A0B8" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><ellipse cx="22.5" cy="16" rx="6.2" ry="14.2" fill="#FFF8FB" transform="rotate(-12 22.5 16)"/><ellipse cx="41.5" cy="16" rx="6.2" ry="14.2" fill="#FFF8FB" transform="rotate(12 41.5 16)"/><ellipse cx="22.5" cy="16.5" rx="3.2" ry="10" fill="#FFB7C8" transform="rotate(-12 22.5 16.5)"/><ellipse cx="41.5" cy="16.5" rx="3.2" ry="10" fill="#FFB7C8" transform="rotate(12 41.5 16.5)"/><circle cx="32" cy="37.2" r="16.4" fill="#FFF8FB"/><ellipse cx="32" cy="42.6" rx="7.5" ry="5.4" fill="#FFE8EF"/><ellipse cx="32" cy="40.2" rx="2.5" ry="2" fill="#F48AA6"/><path d="M32 42 v3.4" stroke="#F48AA6" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="24.8" cy="33.6" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.2" cy="33.6" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.85" cy="32.45" r="1.15" fill="#fff"/><circle cx="40.25" cy="32.45" r="1.15" fill="#fff"/><ellipse cx="20" cy="39.4" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44" cy="39.4" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28.4 46.4 Q32 49.4 35.6 46.4" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'bear', name: '곰', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#F0D2A8" stroke="#B8834A" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><circle cx="16.5" cy="22.5" r="7.4" fill="#C48A4A"/><circle cx="47.5" cy="22.5" r="7.4" fill="#C48A4A"/><circle cx="16.5" cy="22.5" r="4.2" fill="#E8B88A"/><circle cx="47.5" cy="22.5" r="4.2" fill="#E8B88A"/><circle cx="32" cy="35.5" r="17.4" fill="#C48A4A"/><ellipse cx="32" cy="41.4" rx="10.4" ry="7.6" fill="#E8C9A4"/><ellipse cx="32" cy="38.2" rx="3.6" ry="2.7" fill="#5A3A2A"/><ellipse cx="24.4" cy="31.8" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.6" cy="31.8" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.45" cy="30.65" r="1.15" fill="#fff"/><circle cx="40.65" cy="30.65" r="1.15" fill="#fff"/><ellipse cx="19.4" cy="38" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44.6" cy="38" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28 44.6 Q32 48.2 36 44.6" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'panda', name: '판다', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#F3F5F8" stroke="#6A6E74" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><circle cx="16.8" cy="22.2" r="7.2" fill="#2B2B2B"/><circle cx="47.2" cy="22.2" r="7.2" fill="#2B2B2B"/><circle cx="32" cy="35.8" r="17.2" fill="#FFFEFB"/><ellipse cx="23.6" cy="33.2" rx="6.6" ry="5.8" fill="#2B2B2B" transform="rotate(-16 23.6 33.2)"/><ellipse cx="40.4" cy="33.2" rx="6.6" ry="5.8" fill="#2B2B2B" transform="rotate(16 40.4 33.2)"/><ellipse cx="24" cy="33.2" rx="3" ry="3.4" fill="#111"/><ellipse cx="40" cy="33.2" rx="3" ry="3.4" fill="#111"/><circle cx="25.05" cy="32.05" r="1.15" fill="#fff"/><circle cx="41.05" cy="32.05" r="1.15" fill="#fff"/><ellipse cx="32" cy="42.4" rx="8.2" ry="5.6" fill="#F4F4F4"/><ellipse cx="32" cy="40.6" rx="3.1" ry="2.3" fill="#2B2B2B"/><ellipse cx="19" cy="40.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".65"/><ellipse cx="45" cy="40.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".65"/><path d="M28.2 46.2 Q32 49.8 35.8 46.2" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'fox', name: '여우', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFD0A0" stroke="#E07A30" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><path d="M14 31 L17 12.5 L28 24 Z" fill="#FF8C3A"/><path d="M50 31 L47 12.5 L36 24 Z" fill="#FF8C3A"/><path d="M17.4 27.5 L19 16 L25.5 24 Z" fill="#FFE8C8"/><path d="M46.6 27.5 L45 16 L38.5 24 Z" fill="#FFE8C8"/><circle cx="32" cy="36.2" r="16.5" fill="#FF8C3A"/><path d="M17 40 C22 30 27 28 32 36 C37 28 42 30 47 40 C42 50 22 50 17 40Z" fill="#FFF6E8"/><ellipse cx="32" cy="39.2" rx="2.8" ry="2.2" fill="#2B2B2B"/><ellipse cx="24.5" cy="32.4" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.5" cy="32.4" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.55" cy="31.25" r="1.15" fill="#fff"/><circle cx="40.55" cy="31.25" r="1.15" fill="#fff"/><ellipse cx="19.6" cy="38.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44.4" cy="38.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28 44.8 Q32 48.4 36 44.8" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'penguin', name: '펭귄', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#D8EFFF" stroke="#4A88B0" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><ellipse cx="32" cy="36" rx="17.4" ry="18.2" fill="#2C3A4A"/><ellipse cx="32" cy="38.6" rx="13.2" ry="14.6" fill="#FFFEFB"/><ellipse cx="18.5" cy="44" rx="4.6" ry="6.2" fill="#2C3A4A" transform="rotate(-24 18.5 44)"/><ellipse cx="45.5" cy="44" rx="4.6" ry="6.2" fill="#2C3A4A" transform="rotate(24 45.5 44)"/><ellipse cx="32" cy="40.4" rx="4.4" ry="2.5" fill="#F5A024"/><path d="M27.6 40.4 Q32 44.6 36.4 40.4 Q32 42.2 27.6 40.4Z" fill="#E88910"/><ellipse cx="25.2" cy="32.2" rx="3.3" ry="3.8" fill="#1A2430"/><ellipse cx="38.8" cy="32.2" rx="3.3" ry="3.8" fill="#1A2430"/><circle cx="26.25" cy="31.05" r="1.15" fill="#fff"/><circle cx="39.85" cy="31.05" r="1.15" fill="#fff"/><ellipse cx="20.8" cy="37.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="43.2" cy="37.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="26" cy="54.6" rx="4.2" ry="2" fill="#F5A024"/><ellipse cx="38" cy="54.6" rx="4.2" ry="2" fill="#F5A024"/></svg>' },
+      { id: 'lion', name: '사자', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFE29A" stroke="#D4891A" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><circle cx="32" cy="33" r="22" fill="#E89A2A"/><circle cx="14" cy="20" r="7.2" fill="#D47C12"/><circle cx="50" cy="20" r="7.2" fill="#D47C12"/><circle cx="12" cy="34" r="7" fill="#E08918"/><circle cx="52" cy="34" r="7" fill="#E08918"/><circle cx="18" cy="48" r="6.4" fill="#D47C12"/><circle cx="46" cy="48" r="6.4" fill="#D47C12"/><circle cx="32" cy="50.5" r="6.2" fill="#E08918"/><circle cx="32" cy="14.5" r="6.6" fill="#E08918"/><circle cx="32" cy="34.8" r="14.8" fill="#F6D07A"/><ellipse cx="32" cy="40.4" rx="8.2" ry="5.8" fill="#FCE9B0"/><ellipse cx="32" cy="38" rx="3" ry="2.3" fill="#6A3E1A"/><ellipse cx="25.2" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="38.8" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="26.25" cy="31.05" r="1.15" fill="#fff"/><circle cx="39.85" cy="31.05" r="1.15" fill="#fff"/><ellipse cx="20.8" cy="38" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="43.2" cy="38" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28.3 43.8 Q32 47.4 35.7 43.8" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'elephant', name: '코끼리', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#DDE4EC" stroke="#7E8C9A" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><ellipse cx="13" cy="34" rx="9.4" ry="13.2" fill="#B7C2CC"/><ellipse cx="51" cy="34" rx="9.4" ry="13.2" fill="#B7C2CC"/><ellipse cx="13" cy="34" rx="5.6" ry="8.6" fill="#E8B8C8" opacity=".85"/><ellipse cx="51" cy="34" rx="5.6" ry="8.6" fill="#E8B8C8" opacity=".85"/><circle cx="32" cy="33.6" r="15.6" fill="#C5D0DA"/><path d="M28 42 Q26 52 23.5 56 Q29 54 32.5 47 Q34 52 36 54 Q35 46 35 42" fill="#B7C2CC" stroke="#7E8C9A" stroke-width="1"/><ellipse cx="21.5" cy="46.6" rx="2.2" ry="3.2" fill="#F4F6F8"/><ellipse cx="36.5" cy="46.6" rx="2.2" ry="3.2" fill="#F4F6F8"/><ellipse cx="25" cy="31.4" rx="3.3" ry="3.8" fill="#3A4048"/><ellipse cx="39" cy="31.4" rx="3.3" ry="3.8" fill="#3A4048"/><circle cx="26.05" cy="30.25" r="1.15" fill="#fff"/><circle cx="40.05" cy="30.25" r="1.15" fill="#fff"/><ellipse cx="20.4" cy="37.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="43.6" cy="37.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28.7 42.2 Q32 44.8 35.3 42.2" fill="none" stroke="#5A6570" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'giraffe', name: '기린', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFE9A8" stroke="#D4A017" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><rect x="21.4" y="8.5" width="3.6" height="10" rx="1.6" fill="#E8B84A"/><rect x="39" y="8.5" width="3.6" height="10" rx="1.6" fill="#E8B84A"/><circle cx="23.2" cy="8.6" r="3.3" fill="#C9842A"/><circle cx="40.8" cy="8.6" r="3.3" fill="#C9842A"/><path d="M18 28 L16 16 L25 22 Z" fill="#F6D45A"/><path d="M46 28 L48 16 L39 22 Z" fill="#F6D45A"/><circle cx="32" cy="36.2" r="16.6" fill="#F6D45A"/><circle cx="22" cy="30" r="2.3" fill="#C9842A"/><circle cx="42.6" cy="29.2" r="2.6" fill="#C9842A"/><circle cx="24.6" cy="44.8" r="2.4" fill="#C9842A"/><circle cx="41" cy="43.5" r="2.1" fill="#C9842A"/><circle cx="33.5" cy="48.6" r="1.8" fill="#C9842A"/><ellipse cx="32" cy="41.6" rx="7.6" ry="5.4" fill="#FBE9A8"/><ellipse cx="32" cy="39.6" rx="2.6" ry="2" fill="#8A4E1A"/><ellipse cx="24.7" cy="32.6" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.3" cy="32.6" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.75" cy="31.45" r="1.15" fill="#fff"/><circle cx="40.35" cy="31.45" r="1.15" fill="#fff"/><ellipse cx="20" cy="38.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44" cy="38.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28.2 45 Q32 48.6 35.8 45" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'tiger', name: '호랑이', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFD08A" stroke="#E08A20" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><path d="M14 30 L16 13.5 L27 24 Z" fill="#FF9A2A"/><path d="M50 30 L48 13.5 L37 24 Z" fill="#FF9A2A"/><path d="M17.4 27 L18.2 17 L25 24 Z" fill="#FFE8C0"/><path d="M46.6 27 L45.8 17 L39 24 Z" fill="#FFE8C0"/><circle cx="32" cy="36" r="16.6" fill="#FF9A2A"/><path d="M24 21.5 v7" stroke="#3A2A18" stroke-width="2" stroke-linecap="round"/><path d="M32 20 v8" stroke="#3A2A18" stroke-width="2.1" stroke-linecap="round"/><path d="M40 21.5 v7" stroke="#3A2A18" stroke-width="2" stroke-linecap="round"/><path d="M17.5 36 q4 1 3 6" fill="none" stroke="#3A2A18" stroke-width="1.8" stroke-linecap="round"/><path d="M46.5 36 q-4 1 -3 6" fill="none" stroke="#3A2A18" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="32" cy="42" rx="9.4" ry="6.4" fill="#FFF6E8"/><ellipse cx="32" cy="39.4" rx="3" ry="2.3" fill="#2B2B2B"/><ellipse cx="24.5" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.5" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.55" cy="31.05" r="1.15" fill="#fff"/><circle cx="40.55" cy="31.05" r="1.15" fill="#fff"/><ellipse cx="19.4" cy="38.8" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44.6" cy="38.8" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M28 45 Q32 48.6 36 45" fill="none" stroke="#4A2E1C" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'chick', name: '병아리', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#FFF3A8" stroke="#E0C020" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><path d="M32 10.5 Q35 15 32 18 Q29 15 32 10.5Z" fill="#F0C010"/><circle cx="32" cy="36.2" r="17.6" fill="#FFE566"/><ellipse cx="13.6" cy="40" rx="5.4" ry="4.2" fill="#F5D24A"/><ellipse cx="50.4" cy="40" rx="5.4" ry="4.2" fill="#F5D24A"/><path d="M27.8 38.6 L32 43.2 L36.2 38.6 Z" fill="#F0A020"/><path d="M29.4 38.8 L32 41.4 L34.6 38.8 Z" fill="#FFC048"/><ellipse cx="24.8" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><ellipse cx="39.2" cy="32.2" rx="3.3" ry="3.8" fill="#3A2418"/><circle cx="25.85" cy="31.05" r="1.15" fill="#fff"/><circle cx="40.25" cy="31.05" r="1.15" fill="#fff"/><ellipse cx="20" cy="38.4" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="44" cy="38.4" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="28.2" cy="51.6" rx="3.6" ry="2" fill="#F0A020"/><ellipse cx="35.8" cy="51.6" rx="3.6" ry="2" fill="#F0A020"/></svg>' },
+      { id: 'frog', name: '개구리', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#D4F0C8" stroke="#5AA050" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><circle cx="32" cy="38" r="16.8" fill="#7BC67E"/><circle cx="21.5" cy="24.2" r="8.2" fill="#7BC67E"/><circle cx="42.5" cy="24.2" r="8.2" fill="#7BC67E"/><circle cx="21.5" cy="24.2" r="6.4" fill="#E8F8D8"/><circle cx="42.5" cy="24.2" r="6.4" fill="#E8F8D8"/><ellipse cx="21.5" cy="24.4" rx="3.5" ry="4" fill="#2A4A20"/><ellipse cx="42.5" cy="24.4" rx="3.5" ry="4" fill="#2A4A20"/><circle cx="22.55" cy="23.25" r="1.15" fill="#fff"/><circle cx="43.55" cy="23.25" r="1.15" fill="#fff"/><ellipse cx="32" cy="44.4" rx="10.5" ry="6.2" fill="#8FD48A"/><circle cx="28.4" cy="40.5" r="1.15" fill="#2A4A20"/><circle cx="35.6" cy="40.5" r="1.15" fill="#2A4A20"/><ellipse cx="19.4" cy="42.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".7"/><ellipse cx="44.6" cy="42.2" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".7"/><path d="M23 46.2 Q32 53 41 46.2" fill="none" stroke="#2A4A20" stroke-width="1.7" stroke-linecap="round"/></svg>' },
+      { id: 'whale', name: '고래', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#C8ECFF" stroke="#3A8EC8" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><ellipse cx="33" cy="36.5" rx="20" ry="13.5" fill="#6EC6FF"/><path d="M50 30 Q62 22 60 34 Q62 40 51 38 Z" fill="#5AB4F0"/><ellipse cx="33" cy="41.4" rx="14.5" ry="7.4" fill="#E8F7FF"/><path d="M18 20 Q17 10 20.5 12 Q22 18 20 22" fill="#A8DEFF" stroke="#3A8EC8" stroke-width=".8"/><path d="M16.5 12 Q14 6 17 5" fill="none" stroke="#7EC8F0" stroke-width="1.3" stroke-linecap="round"/><path d="M19.5 12 Q19 5.5 22 5.2" fill="none" stroke="#7EC8F0" stroke-width="1.3" stroke-linecap="round"/><ellipse cx="16.5" cy="37" rx="5" ry="3.4" fill="#5AB4F0" transform="rotate(-20 16.5 37)"/><circle cx="26.5" cy="34.2" r="3.3" fill="#2A4A68"/><circle cx="27.5" cy="33.2" r="1.15" fill="#fff"/><ellipse cx="20.5" cy="38.4" rx="3.2" ry="2" fill="#FF8FA3" opacity=".7"/><path d="M22 41.5 Q28 45.2 34 41" fill="none" stroke="#2A4A68" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'hippo', name: '하마', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#E8D8F0" stroke="#A080B0" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><circle cx="17" cy="24" r="5.6" fill="#C9B8D4"/><circle cx="47" cy="24" r="5.6" fill="#C9B8D4"/><circle cx="17" cy="24" r="3" fill="#E8C8D8"/><circle cx="47" cy="24" r="3" fill="#E8C8D8"/><circle cx="32" cy="32.6" r="15.2" fill="#C9B8D4"/><ellipse cx="32" cy="42.2" rx="17" ry="11.2" fill="#D8C8E4"/><ellipse cx="26" cy="41.2" rx="2.5" ry="3.2" fill="#8A6A96"/><ellipse cx="38" cy="41.2" rx="2.5" ry="3.2" fill="#8A6A96"/><ellipse cx="26" cy="41.6" rx="1.3" ry="1.6" fill="#5A4466"/><ellipse cx="38" cy="41.6" rx="1.3" ry="1.6" fill="#5A4466"/><ellipse cx="24" cy="30.4" rx="3.1" ry="3.5" fill="#4A3A58"/><ellipse cx="40" cy="30.4" rx="3.1" ry="3.5" fill="#4A3A58"/><circle cx="25.05" cy="29.25" r="1.15" fill="#fff"/><circle cx="41.05" cy="29.25" r="1.15" fill="#fff"/><ellipse cx="18.8" cy="36.4" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><ellipse cx="45.2" cy="36.4" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".75"/><path d="M27 48.4 Q32 51.4 37 48.4" fill="none" stroke="#5A4466" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+      { id: 'owl', name: '부엉이', svg: '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#F0D8B8" stroke="#A07848" stroke-width="2.6"/><ellipse cx="22" cy="18" rx="11" ry="7" fill="#fff" opacity=".28"/><path d="M16 22 L13 9.5 L25 16 Z" fill="#C4A074"/><path d="M48 22 L51 9.5 L39 16 Z" fill="#C4A074"/><ellipse cx="32" cy="36.5" rx="18" ry="18.4" fill="#D4B07A"/><circle cx="23.5" cy="33.2" r="9.2" fill="#F8E8C8"/><circle cx="40.5" cy="33.2" r="9.2" fill="#F8E8C8"/><circle cx="23.5" cy="33.2" r="7.4" fill="#E8C878"/><circle cx="40.5" cy="33.2" r="7.4" fill="#E8C878"/><ellipse cx="23.5" cy="33.2" rx="3.6" ry="4" fill="#3A2A18"/><ellipse cx="40.5" cy="33.2" rx="3.6" ry="4" fill="#3A2A18"/><circle cx="24.55" cy="32.05" r="1.15" fill="#fff"/><circle cx="41.55" cy="32.05" r="1.15" fill="#fff"/><path d="M28.6 41 L32 46.2 L35.4 41 Z" fill="#E09A2A"/><path d="M16 48 Q24 45 32 48 Q40 45 48 48" fill="none" stroke="#B08A50" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="18.2" cy="43.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".6"/><ellipse cx="45.8" cy="43.6" rx="3.6" ry="2.3" fill="#FF8FA3" opacity=".6"/></svg>' }
+    ];
+
+
+    const ANIMAL_MAP = {};
+    ANIMALS.forEach(function (a) { ANIMAL_MAP[a.id] = a; });
+
+    function now() {
+      if (typeof window !== "undefined" && window.__CHAMJAL_NOW) {
+        return new Date(window.__CHAMJAL_NOW);
+      }
+      try {
+        const q = new URLSearchParams(location.search).get("date");
+        if (q && /^\d{4}-\d{2}-\d{2}$/.test(q)) return new Date(q + "T12:00:00");
+      } catch (err) {}
+      return new Date();
+    }
+
+    function hashStr(s) {
+      let h = 2166136261;
+      s = String(s || "");
+      for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    function animalFor(dateKey, child) {
+      const seed = String(dateKey || "") + ":" + (child && child.id ? child.id : "");
+      return ANIMALS[hashStr(seed) % ANIMALS.length];
+    }
+
+    function resolvedStickerMode(child) {
+      const own = child && child.stickerMode;
+      if (own === "animal" || own === "classic") return own;
+      return db && db.settings && db.settings.stickerMode === "animal" ? "animal" : "classic";
+    }
+
+    function stickerMeta(type) {
+      if (type === "heart") return { id: "heart", name: "하트", svg: HEART_SVG };
+      if (type === "star") return { id: "star", name: "별", svg: STAR_SVG };
+      if (type && ANIMAL_MAP[type]) return ANIMAL_MAP[type];
+      return { id: "star", name: "별", svg: STAR_SVG };
+    }
+
     function defaultState() {
       return {
         version: 1,
@@ -819,6 +924,7 @@
         settings: {
           threshold: 7,
           sharedTodos: true,
+          stickerMode: "classic",
           defaultTodos: DEFAULT_TODOS.map(function (t) { return { id: t.id, text: t.text }; })
         },
         children: []
@@ -830,7 +936,7 @@
     }
 
     function todayKey(d) {
-      d = d || new Date();
+      d = d || now();
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
@@ -838,7 +944,7 @@
     }
 
     function formatKoreanDate(d) {
-      d = d || new Date();
+      d = d || now();
       return d.getFullYear() + "년 " + (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + WEEKDAYS[d.getDay()] + "요일";
     }
 
@@ -854,9 +960,19 @@
           data.settings.defaultTodos = base.settings.defaultTodos;
         }
         data.children = Array.isArray(data.children) ? data.children : [];
+        if (data.settings.stickerMode !== "classic" && data.settings.stickerMode !== "animal") {
+          data.settings.stickerMode = "classic";
+        }
         data.children.forEach(function (c) {
           c.stickers = Array.isArray(c.stickers) ? c.stickers : [];
           c.days = c.days && typeof c.days === "object" ? c.days : {};
+          if (c.stickerMode !== "classic" && c.stickerMode !== "animal") {
+            c.stickerMode = "default";
+          }
+          c.stickers.forEach(function (s) {
+            if (!s || typeof s !== "object") return;
+            if (!s.type) s.type = c.gender === "girl" ? "heart" : "star";
+          });
         });
         return data;
       } catch (err) {
@@ -885,8 +1001,8 @@
       draftGender: "boy",
       draftPhoto: null,
       selectedChildId: null,
-      calYear: new Date().getFullYear(),
-      calMonth: new Date().getMonth(),
+      calYear: now().getFullYear(),
+      calMonth: now().getMonth(),
       photoTargetId: null,
       mathA: 0,
       mathB: 0,
@@ -897,11 +1013,15 @@
     function $(id) { return document.getElementById(id); }
 
     function stickerIcon(type, cls) {
-      return '<span class="sticker-icon ' + (cls || "") + '">' + (type === "heart" ? HEART_SVG : STAR_SVG) + "</span>";
+      const meta = stickerMeta(type);
+      return '<span class="sticker-icon ' + (cls || "") + '" title="' + escapeAttr(meta.name) + '">' + meta.svg + "</span>";
     }
 
-    function stickerTypeFor(child) {
-      return child.gender === "girl" ? "heart" : "star";
+    function stickerTypeFor(child, date) {
+      if (resolvedStickerMode(child) === "animal") {
+        return animalFor(date || todayKey(), child).id;
+      }
+      return child && child.gender === "girl" ? "heart" : "star";
     }
 
     function getTodos(child) {
@@ -1225,8 +1345,9 @@
         const recent = (child.stickers || []).slice(-6);
         let stickers = recent.map(function (s) { return stickerIcon(s.type); }).join("");
         if (!recent.length) stickers = '<span class="tiny">아직 스티커가 없어요</span>';
+        const todaySticker = (child.stickers || []).find(function (s) { return s.date === todayKey(); });
         const status = got
-          ? '<div class="got-today">' + stickerIcon(stickerTypeFor(child)) + " 오늘 스티커를 받았어요!</div>"
+          ? '<div class="got-today">' + stickerIcon(todaySticker ? todaySticker.type : stickerTypeFor(child)) + " 오늘 스티커를 받았어요!</div>"
           : (prog.done >= need
             ? '<div class="tiny">스티커를 받을 준비가 됐어요</div>'
             : '<div class="tiny">스티커까지 <strong>' + Math.max(0, need - prog.done) + "</strong>개 남았어요</div>");
@@ -1290,9 +1411,12 @@
         const dow = new Date(y, m, d).getDay();
         const sticker = map[date];
         const isToday = date === today;
+        const label = sticker
+          ? '<span class="sticker-label">' + escapeHtml(stickerMeta(sticker.type).name) + "</span>"
+          : "";
         html += '<div class="cal-cell' + (isToday ? " today" : "") + (dow === 0 ? " sun" : dow === 6 ? " sat" : "") + '">' +
           '<span class="num">' + d + "</span>" +
-          (sticker ? stickerIcon(sticker.type) : "") +
+          (sticker ? stickerIcon(sticker.type) + label : "") +
           "</div>";
       }
       $("cal-grid").innerHTML = html;
@@ -1333,10 +1457,15 @@
         p.style.setProperty("--rot", (Math.random() * 720 - 360) + "deg");
         layer.appendChild(p);
       }
-      $("award-sticker").innerHTML = stickerIcon(stickerTypeFor(child));
+      const awarded = (child.stickers || []).slice().reverse().find(function (s) { return s.date === todayKey(); });
+      const type = awarded ? awarded.type : stickerTypeFor(child);
+      const meta = stickerMeta(type);
+      $("award-sticker").innerHTML = stickerIcon(type);
       $("award-sticker").querySelector(".sticker-icon").style.width = "88px";
       $("award-sticker").querySelector(".sticker-icon").style.height = "88px";
+      $("award-sticker-name").textContent = meta.name;
       $("celebrate-name").textContent = (child.name || "아이") + ", 참 잘했어요!";
+      $("celebrate-msg").textContent = "오늘 할 일을 멋지게 해냈어요. " + meta.name + " 스티커를 붙여 줄게요!";
       $("overlay-celebrate").classList.add("show");
     }
 
@@ -1371,6 +1500,24 @@
       html += '<button class="icon-btn" data-action="threshold-dec" type="button" aria-label="줄이기">−</button>';
       html += '<div class="val">' + th + "</div>";
       html += '<button class="icon-btn" data-action="threshold-inc" type="button" aria-label="늘리기">+</button>';
+      html += "</div></div>";
+
+      const globalMode = db.settings.stickerMode === "animal" ? "animal" : "classic";
+      html += '<div class="panel settings-card"><h2 class="display">스티커 종류</h2>';
+      html += '<p class="tiny" style="margin-bottom:12px">기본은 남자 아이 별, 여자 아이 하트예요. 동물로 바꾸면 날마다 다른 동물 스티커가 붙어요. 이미 받은 스티커는 받은 날의 모양이 그대로 남아요.</p>';
+      html += '<div class="toggle-row" style="margin-bottom:4px">';
+      html += '<button type="button" class="' + (globalMode === "classic" ? "on" : "") + '" data-action="sticker-mode-global" data-mode="classic">기본 (별·하트)</button>';
+      html += '<button type="button" class="' + (globalMode === "animal" ? "on" : "") + '" data-action="sticker-mode-global" data-mode="animal">동물</button>';
+      html += "</div>";
+      html += '<div class="sticker-gallery">';
+      if (globalMode === "animal") {
+        ANIMALS.forEach(function (a) {
+          html += '<div class="sticker-gallery-item">' + stickerIcon(a.id) + '<span class="lab">' + escapeHtml(a.name) + "</span></div>";
+        });
+      } else {
+        html += '<div class="sticker-gallery-item">' + stickerIcon("star") + '<span class="lab">별</span></div>';
+        html += '<div class="sticker-gallery-item">' + stickerIcon("heart") + '<span class="lab">하트</span></div>';
+      }
       html += "</div></div>";
 
       html += '<div class="panel settings-card"><h2 class="display">할 일 목록</h2>';
@@ -1409,6 +1556,14 @@
         html += '<button type="button" class="choice-btn boy' + (c.gender === "boy" ? " selected" : "") + '" data-action="edit-gender" data-id="' + c.id + '" data-gender="boy" style="min-height:56px;font-size:1.1rem"><span class="emoji">👦</span>남자</button>';
         html += '<button type="button" class="choice-btn girl' + (c.gender === "girl" ? " selected" : "") + '" data-action="edit-gender" data-id="' + c.id + '" data-gender="girl" style="min-height:56px;font-size:1.1rem"><span class="emoji">👧</span>여자</button>';
         html += "</div>";
+        const childMode = (c.stickerMode === "classic" || c.stickerMode === "animal") ? c.stickerMode : "default";
+        html += '<div class="child-sticker-mode">';
+        html += '<p class="tiny">스티커 종류</p>';
+        html += '<div class="toggle-row compact">';
+        html += '<button type="button" class="' + (childMode === "default" ? "on" : "") + '" data-action="edit-sticker-mode" data-id="' + c.id + '" data-mode="default">공통 설정</button>';
+        html += '<button type="button" class="' + (childMode === "classic" ? "on" : "") + '" data-action="edit-sticker-mode" data-id="' + c.id + '" data-mode="classic">기본</button>';
+        html += '<button type="button" class="' + (childMode === "animal" ? "on" : "") + '" data-action="edit-sticker-mode" data-id="' + c.id + '" data-mode="animal">동물</button>';
+        html += "</div></div>";
         html += '<div class="btn-row" style="justify-content:flex-start;margin-top:8px">';
         html += '<button class="btn btn-secondary" data-action="edit-photo" data-id="' + c.id + '" type="button" style="min-height:48px">사진 바꾸기</button>';
         html += '<button class="btn btn-danger" data-action="remove-child" data-id="' + c.id + '" type="button" style="min-height:48px">삭제</button>';
@@ -1484,7 +1639,8 @@
           photo: existing ? existing.photo : null,
           stickers: existing ? existing.stickers : [],
           days: existing ? existing.days : {},
-          customTodos: existing ? existing.customTodos : null
+          customTodos: existing ? existing.customTodos : null,
+          stickerMode: existing && existing.stickerMode ? existing.stickerMode : "default"
         });
       }
       ui.infoIndex = 0;
@@ -1519,7 +1675,8 @@
           photo: c.photo || null,
           stickers: c.stickers || [],
           days: c.days || {},
-          customTodos: c.customTodos || null
+          customTodos: c.customTodos || null,
+          stickerMode: c.stickerMode || "default"
         };
       });
       db.onboardingComplete = true;
@@ -1576,9 +1733,9 @@
       else if (action === "go-home") showScreen("home");
       else if (action === "open-child") {
         ui.selectedChildId = btn.getAttribute("data-id");
-        const now = new Date();
-        ui.calYear = now.getFullYear();
-        ui.calMonth = now.getMonth();
+        const d = now();
+        ui.calYear = d.getFullYear();
+        ui.calMonth = d.getMonth();
         showScreen("child");
       }
       else if (action === "toggle-todo") toggleTodo(btn.getAttribute("data-id"));
@@ -1662,6 +1819,21 @@
         }
         save(); renderSettings();
       }
+      else if (action === "sticker-mode-global") {
+        const mode = btn.getAttribute("data-mode");
+        if (mode === "animal" || mode === "classic") {
+          db.settings.stickerMode = mode;
+          save(); renderSettings();
+        }
+      }
+      else if (action === "edit-sticker-mode") {
+        const c = findChild(btn.getAttribute("data-id"));
+        const mode = btn.getAttribute("data-mode");
+        if (c && (mode === "default" || mode === "classic" || mode === "animal")) {
+          c.stickerMode = mode;
+          save(); renderSettings();
+        }
+      }
       else if (action === "edit-gender") {
         const c = findChild(btn.getAttribute("data-id"));
         if (c) { c.gender = btn.getAttribute("data-gender"); save(); renderSettings(); }
@@ -1697,7 +1869,8 @@
           photo: null,
           stickers: [],
           days: {},
-          customTodos: null
+          customTodos: null,
+          stickerMode: "default"
         });
         save();
         renderSettings();

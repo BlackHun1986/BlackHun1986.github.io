@@ -1,4 +1,4 @@
-const CACHE = "chamjal-v3";
+const CACHE = "chamjal-v4";
 const ASSETS = [
   "./",
   "./index.html",
