@@ -3,7 +3,10 @@
 
   const STORAGE_VISITED = "kids-space-visited";
   const STORAGE_INTRO = "kids-space-intro-v1";
+  const STORAGE_CUSTOM = "kids-space-custom-planets";
   const TOTAL = 12;
+  const MAX_CUSTOM = 6;
+  const OVERLAYS = ["card-overlay", "album-overlay", "quiz-overlay", "intro-overlay", "builder-overlay", "confirm-overlay"];
 
   const BODIES = {
     galaxy: {
@@ -475,6 +478,7 @@
 
     $("galaxy-art").innerHTML = art("galaxy", "nav");
     updateVisitedMarks();
+    renderCustomBelt();
   }
 
   function updateVisitedMarks() {
@@ -487,10 +491,11 @@
   }
 
   function openCard(id) {
-    const b = BODIES[id];
+    const b = getBody(id);
     if (!b) return;
     stopSpeak();
-    const first = !visited.has(id);
+    const custom = !!b.custom;
+    const first = !custom && !visited.has(id);
     if (first) {
       visited.add(id);
       saveVisited();
@@ -500,8 +505,9 @@
     $("hint").hidden = true;
     const card = $("card");
     card.dataset.id = id;
+    card.classList.toggle("is-custom", custom);
     card.style.setProperty("--accent-ink", b.accent);
-    $("card-art").innerHTML = art(id, "card");
+    $("card-art").innerHTML = custom ? customArt(b._raw, "card", true) : art(id, "card");
     $("card-kicker").textContent = b.kicker;
     $("card-title").textContent = b.name;
     const stamp = $("new-stamp");
@@ -509,10 +515,20 @@
     $("card-facts").innerHTML = b.facts
       .map((t, i) => `<li data-n="${i + 1}">${escapeHtml(t)}</li>`)
       .join("");
-    $("card-fun").innerHTML = `<strong>알고 봤니?</strong>${escapeHtml(b.fun)}`;
+    $("card-fun").innerHTML = `<strong>알고 봤니?</strong> ${escapeHtml(b.fun)}`;
     $("card-meta").innerHTML = `
       <div class="meta-item"><span class="label">${escapeHtml(b.tempLabel)}</span>${escapeHtml(b.temp)}</div>
-      <div class="meta-item"><span class="label">가려면</span>${escapeHtml(b.travel)}</div>`;
+      <div class="meta-item"><span class="label">${custom ? "가는 법" : "가려면"}</span>${escapeHtml(b.travel)}</div>`;
+    const explorer = $("card-explorer");
+    const photo = $("card-photo");
+    if (custom && b.photo) {
+      photo.src = b.photo;
+      explorer.hidden = false;
+    } else {
+      photo.removeAttribute("src");
+      explorer.hidden = true;
+    }
+    $("btn-edit-planet").hidden = !custom;
     $("btn-speak").textContent = "🔊 읽어 줘";
     $("btn-speak").classList.remove("playing");
     showOverlay("card-overlay");
@@ -529,18 +545,20 @@
     return String(s)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function speechText(b) {
-    const clean = (t) => t.replace(/[🔥❄️🌿🏅🌟🔊]/g, "").replace(/\s+/g, " ").trim();
-    return [
+    const parts = [
       `${b.name}. ${b.kicker}.`,
       ...b.facts,
       `알고 봤니? ${b.fun}`,
-      `${b.tempLabel}: ${clean(b.temp)}`,
-      `가려면, ${b.travel}`
-    ].join(" ");
+      `${b.tempLabel}: ${b.temp}`,
+      b.travel ? `가려면, ${b.travel}` : ""
+    ];
+    return stripForSpeech(parts.join(" "));
   }
 
   function stopSpeak() {
@@ -553,7 +571,7 @@
   }
 
   function toggleSpeak() {
-    const b = BODIES[openId];
+    const b = getBody(openId);
     if (!b) return;
     if (!window.speechSynthesis) {
       $("btn-speak").textContent = "이 기기는 읽기를 못 해요";
@@ -563,7 +581,9 @@
       stopSpeak();
       return;
     }
-    const u = new SpeechSynthesisUtterance(speechText(b));
+    const spoken = speechText(b);
+    if (!spoken) return;
+    const u = new SpeechSynthesisUtterance(spoken);
     u.lang = "ko-KR";
     u.rate = 0.92;
     u.pitch = 1.05;
@@ -583,8 +603,7 @@
   }
   function hideOverlay(id) {
     $(id).hidden = true;
-    const anyOpen = !["card-overlay", "album-overlay", "quiz-overlay", "intro-overlay"]
-      .every((k) => $(k).hidden);
+    const anyOpen = !OVERLAYS.every((k) => $(k).hidden);
     if (!anyOpen) document.body.classList.remove("paused");
   }
 
@@ -697,10 +716,777 @@
     $("quiz-end-msg").textContent = msg;
   }
 
+
+  const COLORS = [
+    { id: "#E85A5A", name: "빨강" },
+    { id: "#FF8A3D", name: "주황" },
+    { id: "#FFD56A", name: "노랑" },
+    { id: "#3DDC97", name: "초록" },
+    { id: "#5B9FE8", name: "파랑" },
+    { id: "#9B7EDE", name: "보라" },
+    { id: "#FF7EB3", name: "분홍" },
+    { id: "#7FDBDA", name: "민트" },
+    { id: "#C48A5A", name: "갈색" },
+    { id: "#E8E6F0", name: "은색" }
+  ];
+  const PATTERNS = [
+    { id: "stripes", name: "줄무늬" },
+    { id: "spots", name: "점박이" },
+    { id: "clouds", name: "구름" },
+    { id: "craters", name: "분화구" },
+    { id: "swirl", name: "소용돌이" }
+  ];
+  const FACES = [
+    { id: "none", name: "얼굴 없음" },
+    { id: "smile", name: "웃는 얼굴" },
+    { id: "wink", name: "윙크" },
+    { id: "heart", name: "하트 눈" },
+    { id: "sleepy", name: "졸린 얼굴" },
+    { id: "star", name: "별 눈" }
+  ];
+  const SIZES = [
+    { id: "small", name: "작게" },
+    { id: "medium", name: "보통" },
+    { id: "large", name: "크게" }
+  ];
+  const TEMPS = [
+    { id: "hot", name: "뜨거워요", speech: "아주 뜨거워요.", card: "🔥 아주 뜨거워요." },
+    { id: "warm", name: "따뜻해요", speech: "따뜻하고 포근해요.", card: "🌿 따뜻하고 포근해요." },
+    { id: "cold", name: "추워요", speech: "아주 추워요.", card: "🥶 아주 추워요." }
+  ];
+  const WHOS = [
+    { id: "nobody", name: "아무도 없어요", card: "아직은 아무도 살지 않아요." },
+    { id: "kids", name: "아이들", card: "상상 속의 아이들이 살아요." },
+    { id: "animals", name: "귀여운 동물", card: "귀여운 동물 친구들이 살아요." },
+    { id: "robots", name: "로봇", card: "친절한 로봇 친구들이 살아요." },
+    { id: "aliens", name: "외계 친구", card: "착한 외계 친구들이 살아요." },
+    { id: "me", name: "바로 나!", card: "바로 네가 사는 상상 행성이에요." }
+  ];
+  const RING_COLORS = [
+    { id: "#E8D4A0", name: "노랑" },
+    { id: "#F4F6FA", name: "하양" },
+    { id: "#FF7EB3", name: "분홍" },
+    { id: "#7C9CFF", name: "파랑" },
+    { id: "#C9B0FF", name: "보라" }
+  ];
+  const PLANET_NAMES = ["솜사탕별", "무지개별", "반짝이별", "초코별", "젤리별", "구름빵별", "별사탕별", "햇살별", "달콤별", "푸른꿈별", "웃음별", "마법별", "뽀로롱별", "하늘솜별", "용감별", "꿈틀별", "사탕행성", "별방울"];
+  const MOON_NAMES = ["꼬마달", "초코달", "별달", "솜달", "반짝달", "구름달", "젤리달", "달님이", "초승이", "보름이", "하트달", "방울달"];
+  const BELT_SIZE = {
+    small: "clamp(50px, 7vmin, 62px)",
+    medium: "clamp(62px, 8.8vmin, 80px)",
+    large: "clamp(74px, 10.8vmin, 96px)"
+  };
+
+  let customs = loadCustoms();
+  let draft = null;
+  let toastTimer = 0;
+
+  function stripForSpeech(text) {
+    return String(text)
+      .replace(/\uFE0F/g, "")
+      .replace(/\u200D/g, "")
+      .replace(/\p{Extended_Pictographic}/gu, "")
+      .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "")
+      .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, "")
+      .replace(/[\u20E3\uFE0E]/g, "")
+      .replace(/[\u{E0020}-\u{E007F}]/gu, "")
+      .replace(/[\uFE00-\uFE0F]/g, "")
+      .replace(/[\u2190-\u21FF]/g, "")
+      .replace(/[\u2300-\u23FF]/g, "")
+      .replace(/[\u2460-\u24FF]/g, "")
+      .replace(/[\u2500-\u25FF]/g, "")
+      .replace(/[\u2600-\u26FF]/g, "")
+      .replace(/[\u2700-\u27BF]/g, "")
+      .replace(/[\u{1F000}-\u{1FAFF}]/gu, "")
+      .replace(/[©®™]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function loadCustoms() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_CUSTOM) || "[]");
+      if (!Array.isArray(raw)) return [];
+      return raw.filter((p) => p && p.id && p.name).slice(0, MAX_CUSTOM).map(normalizeCustom);
+    } catch {
+      return [];
+    }
+  }
+
+  function normalizeCustom(p) {
+    const moons = Math.max(0, Math.min(3, Number(p.moons) || 0));
+    let moonNames = Array.isArray(p.moonNames) ? p.moonNames.map((n) => String(n || "").trim()) : [];
+    while (moonNames.length < moons) moonNames.push(randomMoonName(moonNames));
+    moonNames = moonNames.slice(0, moons).map((n, i) => n || "달 " + (i + 1));
+    return {
+      id: String(p.id),
+      name: String(p.name || "").trim().slice(0, 16) || "상상 행성",
+      color: COLORS.some((c) => c.id === p.color) ? p.color : "#5B9FE8",
+      size: SIZES.some((s) => s.id === p.size) ? p.size : "medium",
+      pattern: PATTERNS.some((x) => x.id === p.pattern) ? p.pattern : "spots",
+      ring: !!p.ring,
+      ringColor: RING_COLORS.some((c) => c.id === p.ringColor) ? p.ringColor : "#E8D4A0",
+      moons,
+      moonNames,
+      face: FACES.some((f) => f.id === p.face) ? p.face : "smile",
+      temp: TEMPS.some((x) => x.id === p.temp) ? p.temp : "warm",
+      who: WHOS.some((x) => x.id === p.who) ? p.who : "kids",
+      photo: typeof p.photo === "string" && p.photo.startsWith("data:image/") ? p.photo : null
+    };
+  }
+
+  function persistCustoms(list) {
+    const json = JSON.stringify(list);
+    try {
+      localStorage.setItem(STORAGE_CUSTOM, json);
+      customs = list;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function saveCustoms(list, opts = {}) {
+    if (persistCustoms(list)) return true;
+    if (!opts.allowDropPhoto) {
+      showToast("저장 공간이 부족해요. 사진을 빼거나 다른 상상 행성을 지워 보세요.");
+      return false;
+    }
+    const dropped = list.map((p) => (p.id === opts.dropId ? { ...p, photo: null } : p));
+    if (persistCustoms(dropped)) {
+      showToast("공간이 부족해서 사진 없이 저장했어요.");
+      return true;
+    }
+    showToast("저장 공간이 부족해요. 다른 상상 행성을 지우고 다시 해 보세요.");
+    return false;
+  }
+
+  function showToast(msg) {
+    const el = $("toast");
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
+  }
+
+  function colorName(hex) {
+    return (COLORS.find((c) => c.id === hex) || { name: "예쁜" }).name;
+  }
+  function patternName(id) {
+    return (PATTERNS.find((p) => p.id === id) || { name: "무늬" }).name;
+  }
+  function faceName(id) {
+    return (FACES.find((p) => p.id === id) || { name: "" }).name;
+  }
+  function sizeName(id) {
+    return (SIZES.find((p) => p.id === id) || { name: "보통" }).name;
+  }
+  function tempInfo(id) {
+    return TEMPS.find((p) => p.id === id) || TEMPS[1];
+  }
+  function whoInfo(id) {
+    return WHOS.find((p) => p.id === id) || WHOS[1];
+  }
+  function ringColorName(hex) {
+    return (RING_COLORS.find((c) => c.id === hex) || { name: "예쁜" }).name;
+  }
+
+  function randomFrom(list, avoid) {
+    const pool = list.filter((n) => !avoid || !avoid.includes(n));
+    const src = pool.length ? pool : list;
+    return src[Math.floor(Math.random() * src.length)];
+  }
+  function randomPlanetName() {
+    const used = customs.map((p) => p.name);
+    if (draft && draft.name) used.push(draft.name);
+    return randomFrom(PLANET_NAMES, used);
+  }
+  function randomMoonName(avoid) {
+    return randomFrom(MOON_NAMES, avoid);
+  }
+
+  function shade(hex, amt) {
+    const n = hex.replace("#", "");
+    const ch = (i) => {
+      let v = parseInt(n.slice(i, i + 2), 16);
+      v = Math.max(0, Math.min(255, Math.round(v + (amt > 0 ? (255 - v) * amt : v * amt))));
+      return v.toString(16).padStart(2, "0");
+    };
+    return "#" + ch(0) + ch(2) + ch(4);
+  }
+
+  function customArt(p, suffix, withMoons) {
+    const x = "-" + (suffix || "p");
+    const light = shade(p.color, 0.35);
+    const mid = p.color;
+    const dark = shade(p.color, -0.28);
+    const vb = p.ring || withMoons ? "0 0 180 120" : "0 0 100 100";
+    const cx = p.ring || withMoons ? 90 : 50;
+    const cy = p.ring || withMoons ? 60 : 50;
+    const r = p.ring || withMoons ? 34 : 42;
+    let pattern = "";
+    const clip = `c${x}`;
+    if (p.pattern === "stripes") {
+      pattern = `<g clip-path="url(#${clip})">
+        <rect x="${cx - r}" y="${cy - r + r * 0.15}" width="${r * 2}" height="${r * 0.16}" fill="${light}" opacity=".7"/>
+        <rect x="${cx - r}" y="${cy - r * 0.2}" width="${r * 2}" height="${r * 0.18}" fill="${dark}" opacity=".35"/>
+        <rect x="${cx - r}" y="${cy + r * 0.25}" width="${r * 2}" height="${r * 0.16}" fill="${light}" opacity=".55"/>
+      </g>`;
+    } else if (p.pattern === "spots") {
+      pattern = `<g clip-path="url(#${clip})" fill="${dark}" opacity=".35">
+        <circle cx="${cx - r * 0.35}" cy="${cy - r * 0.2}" r="${r * 0.16}"/>
+        <circle cx="${cx + r * 0.3}" cy="${cy + r * 0.1}" r="${r * 0.2}"/>
+        <circle cx="${cx + r * 0.15}" cy="${cy - r * 0.4}" r="${r * 0.1}"/>
+        <circle cx="${cx - r * 0.15}" cy="${cy + r * 0.4}" r="${r * 0.12}"/>
+      </g>`;
+    } else if (p.pattern === "clouds") {
+      pattern = `<g clip-path="url(#${clip})" fill="#fff" opacity=".45">
+        <ellipse cx="${cx - r * 0.2}" cy="${cy - r * 0.3}" rx="${r * 0.42}" ry="${r * 0.16}"/>
+        <ellipse cx="${cx + r * 0.28}" cy="${cy + r * 0.15}" rx="${r * 0.35}" ry="${r * 0.14}"/>
+        <ellipse cx="${cx + r * 0.05}" cy="${cy + r * 0.42}" rx="${r * 0.28}" ry="${r * 0.1}"/>
+      </g>`;
+    } else if (p.pattern === "craters") {
+      pattern = `<g clip-path="url(#${clip})" fill="${dark}" opacity=".3" stroke="${dark}" stroke-width="1.2">
+        <circle cx="${cx - r * 0.3}" cy="${cy - r * 0.15}" r="${r * 0.18}" fill="${dark}" opacity=".35"/>
+        <circle cx="${cx + r * 0.28}" cy="${cy + r * 0.22}" r="${r * 0.22}"/>
+        <circle cx="${cx + r * 0.1}" cy="${cy - r * 0.38}" r="${r * 0.1}"/>
+        <circle cx="${cx - r * 0.05}" cy="${cy + r * 0.4}" r="${r * 0.08}"/>
+      </g>`;
+    } else {
+      pattern = `<g clip-path="url(#${clip})" fill="none" stroke="${light}" stroke-width="${r * 0.12}" opacity=".55" stroke-linecap="round">
+        <path d="M ${cx - r * 0.6} ${cy} C ${cx - r * 0.2} ${cy - r * 0.7}, ${cx + r * 0.2} ${cy + r * 0.7}, ${cx + r * 0.6} ${cy}"/>
+        <path d="M ${cx - r * 0.45} ${cy + r * 0.35} C ${cx} ${cy - r * 0.15}, ${cx + r * 0.1} ${cy + r * 0.55}, ${cx + r * 0.5} ${cy + r * 0.15}"/>
+      </g>`;
+    }
+    let face = "";
+    if (p.face && p.face !== "none") {
+      const ey = cy - r * 0.12;
+      const el = cx - r * 0.22;
+      const er = cx + r * 0.22;
+      if (p.face === "heart") {
+        face = `<g fill="#F25B7A">
+          <path d="M ${el} ${ey} c -4 -6 -12 -1 -0 8 c 12 -9 4 -14 0 -8z"/>
+          <path d="M ${er} ${ey} c -4 -6 -12 -1 -0 8 c 12 -9 4 -14 0 -8z"/>
+        </g>
+        <path d="M ${cx - r * 0.18} ${cy + r * 0.28} Q ${cx} ${cy + r * 0.42} ${cx + r * 0.18} ${cy + r * 0.28}" fill="none" stroke="#3A241C" stroke-width="2.2" stroke-linecap="round"/>`;
+      } else if (p.face === "wink") {
+        face = `<circle cx="${el}" cy="${ey}" r="${r * 0.08}" fill="#2A241C"/>
+          <path d="M ${er - r * 0.12} ${ey} Q ${er} ${ey + r * 0.08} ${er + r * 0.12} ${ey}" fill="none" stroke="#2A241C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M ${cx - r * 0.2} ${cy + r * 0.25} Q ${cx} ${cy + r * 0.42} ${cx + r * 0.2} ${cy + r * 0.25}" fill="none" stroke="#2A241C" stroke-width="2.2" stroke-linecap="round"/>`;
+      } else if (p.face === "sleepy") {
+        face = `<path d="M ${el - r * 0.12} ${ey} Q ${el} ${ey + r * 0.08} ${el + r * 0.12} ${ey}" fill="none" stroke="#2A241C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M ${er - r * 0.12} ${ey} Q ${er} ${ey + r * 0.08} ${er + r * 0.12} ${ey}" fill="none" stroke="#2A241C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M ${cx - r * 0.14} ${cy + r * 0.3} H ${cx + r * 0.14}" fill="none" stroke="#2A241C" stroke-width="2.2" stroke-linecap="round"/>`;
+      } else if (p.face === "star") {
+        const star = (sx, sy, s) => `M ${sx} ${sy - s} L ${sx + s * 0.25} ${sy - s * 0.25} L ${sx + s} ${sy - s * 0.2} L ${sx + s * 0.35} ${sy + s * 0.1} L ${sx + s * 0.5} ${sy + s} L ${sx} ${sy + s * 0.4} L ${sx - s * 0.5} ${sy + s} L ${sx - s * 0.35} ${sy + s * 0.1} L ${sx - s} ${sy - s * 0.2} L ${sx - s * 0.25} ${sy - s * 0.25} Z`;
+        face = `<path d="${star(el, ey, r * 0.16)}" fill="#FFE14A" stroke="#E0A800" stroke-width="0.6"/>
+          <path d="${star(er, ey, r * 0.16)}" fill="#FFE14A" stroke="#E0A800" stroke-width="0.6"/>
+          <path d="M ${cx - r * 0.18} ${cy + r * 0.26} Q ${cx} ${cy + r * 0.44} ${cx + r * 0.18} ${cy + r * 0.26}" fill="none" stroke="#2A241C" stroke-width="2.2" stroke-linecap="round"/>`;
+      } else {
+        face = `<circle cx="${el}" cy="${ey}" r="${r * 0.08}" fill="#2A241C"/>
+          <circle cx="${er}" cy="${ey}" r="${r * 0.08}" fill="#2A241C"/>
+          <path d="M ${cx - r * 0.2} ${cy + r * 0.22} Q ${cx} ${cy + r * 0.42} ${cx + r * 0.2} ${cy + r * 0.22}" fill="none" stroke="#2A241C" stroke-width="2.2" stroke-linecap="round"/>`;
+      }
+    }
+    let ringBack = "", ringFront = "";
+    if (p.ring) {
+      const rc = p.ringColor || "#E8D4A0";
+      ringBack = `<ellipse cx="${cx}" cy="${cy}" rx="${r * 1.85}" ry="${r * 0.52}" fill="none" stroke="${rc}" stroke-width="7" opacity=".85"/>`;
+      ringFront = `<path d="M ${cx - r * 1.85} ${cy} A ${r * 1.85} ${r * 0.52} 0 0 0 ${cx + r * 1.85} ${cy}" fill="none" stroke="${rc}" stroke-width="7" stroke-linecap="round"/>`;
+    }
+    let moons = "";
+    if (withMoons && p.moons > 0) {
+      const angs = [20, 140, 250];
+      for (let i = 0; i < p.moons; i++) {
+        const a = (angs[i] * Math.PI) / 180;
+        const mx = cx + Math.cos(a) * (r + 28);
+        const my = cy + Math.sin(a) * (r * 0.7 + 20);
+        const label = escapeHtml((p.moonNames[i] || "달").slice(0, 6));
+        moons += `<circle cx="${mx}" cy="${my}" r="7" fill="url(#moondot${x})"/>
+          <text x="${mx}" y="${my + 16}" text-anchor="middle" font-size="9" fill="#3A3228" font-family="Jua, sans-serif">${label}</text>`;
+      }
+    }
+    return `<svg viewBox="${vb}" aria-hidden="true">
+      <defs>
+        <radialGradient id="cg${x}" cx="34%" cy="32%" r="70%">
+          <stop offset="0%" stop-color="${light}"/>
+          <stop offset="55%" stop-color="${mid}"/>
+          <stop offset="100%" stop-color="${dark}"/>
+        </radialGradient>
+        <clipPath id="${clip}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
+        <radialGradient id="moondot${x}" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#9A9BA4"/>
+        </radialGradient>
+      </defs>
+      ${ringBack}
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#cg${x})"/>
+      ${pattern}
+      ${face}
+      ${ringFront}
+      ${moons}
+    </svg>`;
+  }
+
+  function customToBody(p) {
+    const t = tempInfo(p.temp);
+    const w = whoInfo(p.who);
+    const moonPart = p.moons
+      ? (p.moons === 1
+        ? `달이 하나 있어요. 이름은 ${p.moonNames[0] || "달"}이에요.`
+        : `달이 ${p.moons}개 있어요. 이름은 ${p.moonNames.join(", ")}이에요.`)
+      : "달은 없어요.";
+    const ringPart = p.ring
+      ? `${ringColorName(p.ringColor)} 고리가 빙글빙글 둘러싸여 있어요.`
+      : "고리는 없어요.";
+    const facePart = p.face === "none" ? "얼굴은 그리지 않았어요." : `${faceName(p.face)}을 그렸어요.`;
+    const sizeSent = { small: "작은 행성으로 만들었어요.", medium: "보통 크기로 만들었어요.", large: "큰 행성으로 만들었어요." };
+    const facts = [
+      "이건 네가 만든 상상 속 행성이에요. 진짜 태양계 행성은 아니에요.",
+      `색깔은 ${colorName(p.color)}이에요. ${sizeSent[p.size] || sizeSent.medium}`,
+      `표면 무늬는 ${patternName(p.pattern)}예요. ${ringPart}`,
+      moonPart
+    ];
+    return {
+      id: p.id,
+      name: p.name,
+      kicker: "내가 만든 상상 행성",
+      accent: p.color,
+      facts,
+      fun: `${facePart} ${w.card}`,
+      tempLabel: "날씨",
+      temp: t.card,
+      travel: "상상의 로켓을 타면, 눈 깜짝할 사이에 갈 수 있어요!",
+      custom: true,
+      photo: p.photo,
+      _raw: p
+    };
+  }
+
+  function getBody(id) {
+    if (BODIES[id]) return BODIES[id];
+    const p = customs.find((c) => c.id === id);
+    return p ? customToBody(p) : null;
+  }
+
+  function isCustomId(id) {
+    return String(id || "").startsWith("custom-");
+  }
+
+  function emptyDraft() {
+    return {
+      id: null,
+      name: "",
+      color: "#5B9FE8",
+      size: "medium",
+      pattern: "spots",
+      ring: false,
+      ringColor: "#E8D4A0",
+      moons: 1,
+      moonNames: [randomMoonName()],
+      face: "smile",
+      temp: "warm",
+      who: "kids",
+      photo: null
+    };
+  }
+
+  function renderCustomBelt() {
+    const row = $("custom-planets");
+    if (!row) return;
+    row.innerHTML = "";
+    if (!customs.length) {
+      const p = document.createElement("p");
+      p.className = "belt-empty";
+      p.textContent = "상상의 행성을 만들어 보세요!";
+      row.appendChild(p);
+      return;
+    }
+    customs.forEach((pl) => {
+      const cluster = document.createElement("div");
+      cluster.className = "custom-cluster";
+      cluster.dataset.id = pl.id;
+      cluster.style.setProperty("--size", BELT_SIZE[pl.size] || BELT_SIZE.medium);
+      cluster.style.setProperty("--belt-w", pl.moons ? "100px" : "88px");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "body";
+      btn.dataset.id = pl.id;
+      btn.setAttribute("aria-label", pl.name + ", 상상 행성");
+      btn.style.setProperty("--size", BELT_SIZE[pl.size] || BELT_SIZE.medium);
+      btn.style.setProperty("--glow", "rgba(200,180,255,0.5)");
+      btn.innerHTML = `<span class="planet-art" aria-hidden="true">${customArt(pl, "belt-" + pl.id, false)}</span><span class="planet-name">${escapeHtml(pl.name)}</span>`;
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openCard(pl.id);
+      });
+      cluster.appendChild(btn);
+      if (pl.moons > 0) {
+        const orbit = document.createElement("div");
+        orbit.className = "c-moon-orbit";
+        for (let i = 0; i < pl.moons; i++) {
+          const moon = document.createElement("span");
+          moon.className = "c-moon";
+          moon.style.setProperty("--a", i * (360 / pl.moons) + "deg");
+          moon.innerHTML = `<span class="c-moon-dot"></span><span class="c-moon-name">${escapeHtml(pl.moonNames[i] || "달")}</span>`;
+          orbit.appendChild(moon);
+        }
+        cluster.appendChild(orbit);
+      }
+      row.appendChild(cluster);
+    });
+  }
+
+  function picksHtml(list, key, getId, getLabel, swatch) {
+    return list.map((item) => {
+      const id = getId(item);
+      const on = (key === "ring" ? !!draft.ring === !!id : draft[key] === id) ? " on" : "";
+      if (swatch) {
+        return `<button type="button" class="swatch${on}" data-k="${key}" data-v="${id}" style="background:${id}" aria-label="${escapeHtml(getLabel(item))}"></button>`;
+      }
+      return `<button type="button" class="pick${on}" data-k="${key}" data-v="${String(id)}">${escapeHtml(getLabel(item))}</button>`;
+    }).join("");
+  }
+
+  function renderBuilderOpts() {
+    const ringBlock = draft.ring
+      ? `<div class="opt-group"><p class="opt-label">고리 색깔</p><div class="opt-picks">${picksHtml(RING_COLORS, "ringColor", (c) => c.id, (c) => c.name, true)}</div></div>`
+      : "";
+    let moonBlock = "";
+    if (draft.moons > 0) {
+      const rows = [];
+      for (let i = 0; i < draft.moons; i++) {
+        rows.push(`<div class="moon-name-row">
+          <span>달 ${i + 1}</span>
+          <input type="text" data-moon="${i}" maxlength="10" value="${escapeHtml(draft.moonNames[i] || "")}" placeholder="달 이름" autocomplete="off">
+          <button type="button" class="mini" data-rand-moon="${i}">랜덤</button>
+        </div>`);
+      }
+      moonBlock = `<div class="moon-names" id="moon-names">${rows.join("")}</div>`;
+    }
+    $("builder-opts").innerHTML = `
+      <div class="opt-group"><p class="opt-label">색깔</p><div class="opt-picks">${picksHtml(COLORS, "color", (c) => c.id, (c) => c.name, true)}</div></div>
+      <div class="opt-group"><p class="opt-label">크기</p><div class="opt-picks">${picksHtml(SIZES, "size", (s) => s.id, (s) => s.name)}</div></div>
+      <div class="opt-group"><p class="opt-label">표면 무늬</p><div class="opt-picks">${picksHtml(PATTERNS, "pattern", (s) => s.id, (s) => s.name)}</div></div>
+      <div class="opt-group"><p class="opt-label">고리</p><div class="opt-picks">${picksHtml([{ id: true, name: "있어요" }, { id: false, name: "없어요" }], "ring", (s) => s.id, (s) => s.name)}</div></div>
+      ${ringBlock}
+      <div class="opt-group"><p class="opt-label">달</p><div class="opt-picks">${picksHtml([0, 1, 2, 3].map((n) => ({ id: n, name: n === 0 ? "없음" : n + "개" })), "moons", (s) => s.id, (s) => s.name)}</div>${moonBlock}</div>
+      <div class="opt-group"><p class="opt-label">얼굴 스티커</p><div class="opt-picks">${picksHtml(FACES, "face", (s) => s.id, (s) => s.name)}</div></div>
+      <div class="opt-group"><p class="opt-label">더울까, 추울까?</p><div class="opt-picks">${picksHtml(TEMPS, "temp", (s) => s.id, (s) => s.name)}</div></div>
+      <div class="opt-group"><p class="opt-label">누가 살까?</p><div class="opt-picks">${picksHtml(WHOS, "who", (s) => s.id, (s) => s.name)}</div></div>
+    `;
+  }
+
+  function syncMoonNamesFromDom() {
+    if (!draft) return;
+    document.querySelectorAll("#moon-names input[data-moon]").forEach((inp) => {
+      const i = Number(inp.dataset.moon);
+      draft.moonNames[i] = inp.value.slice(0, 10);
+    });
+  }
+
+  function updateBuilderPreview() {
+    $("builder-preview").innerHTML = `<span class="planet-art">${customArt(draft, "prev", true)}</span>`;
+  }
+
+  function updatePhotoUI() {
+    const img = $("photo-preview");
+    const ph = $("photo-placeholder");
+    const clear = $("btn-clear-photo");
+    const take = $("btn-take-photo");
+    if (draft.photo) {
+      img.src = draft.photo;
+      img.hidden = false;
+      ph.hidden = true;
+      clear.hidden = false;
+      take.textContent = "다시 찍기";
+    } else {
+      img.removeAttribute("src");
+      img.hidden = true;
+      ph.hidden = false;
+      clear.hidden = true;
+      take.textContent = "사진 찍기";
+    }
+  }
+
+  function setBuilderMsg(msg) {
+    const el = $("builder-msg");
+    el.textContent = msg || "";
+    el.hidden = !msg;
+  }
+
+  function openBuilder(existing) {
+    stopSpeak();
+    draft = existing ? { ...existing, moonNames: existing.moonNames.slice() } : emptyDraft();
+    $("builder-title").textContent = existing ? "상상 행성 바꾸기" : "나만의 행성 만들기";
+    $("planet-name").value = draft.name;
+    $("btn-delete-planet").hidden = !existing;
+    $("btn-delete-planet").setAttribute("hidden", "");
+    if (existing) $("btn-delete-planet").removeAttribute("hidden");
+    document.querySelector(".builder").classList.toggle("is-editing", !!existing);
+    setBuilderMsg("");
+    renderBuilderOpts();
+    updateBuilderPreview();
+    updatePhotoUI();
+    showOverlay("builder-overlay");
+    $("planet-name").focus();
+  }
+
+  function applyDraftKey(key, value) {
+    syncMoonNamesFromDom();
+    if (key === "ring") draft.ring = value === true || value === "true";
+    else if (key === "moons") {
+      const n = Number(value);
+      draft.moons = n;
+      while (draft.moonNames.length < n) draft.moonNames.push(randomMoonName(draft.moonNames));
+      draft.moonNames = draft.moonNames.slice(0, n);
+    } else {
+      draft[key] = value;
+    }
+    renderBuilderOpts();
+    updateBuilderPreview();
+  }
+
+  function saveDraftPlanet() {
+    syncMoonNamesFromDom();
+    let name = ($("planet-name").value || "").trim().slice(0, 16);
+    if (!name) name = randomPlanetName();
+    draft.name = name;
+    $("planet-name").value = name;
+    const moonNames = [];
+    for (let i = 0; i < draft.moons; i++) {
+      moonNames.push((draft.moonNames[i] || "").trim().slice(0, 10) || "달 " + (i + 1));
+    }
+    const planet = normalizeCustom({
+      ...draft,
+      id: draft.id || "custom-" + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36),
+      name,
+      moonNames
+    });
+    const list = customs.slice();
+    const idx = list.findIndex((p) => p.id === planet.id);
+    if (idx >= 0) list[idx] = planet;
+    else {
+      if (list.length >= MAX_CUSTOM) {
+        setBuilderMsg("상상 행성은 6개까지 만들 수 있어요. 하나를 지우고 다시 만들어 보세요.");
+        return;
+      }
+      list.push(planet);
+    }
+    if (!saveCustoms(list, { allowDropPhoto: true, dropId: planet.id })) {
+      setBuilderMsg("저장 공간이 부족해요. 사진을 지우거나 다른 행성을 지워 보세요.");
+      return;
+    }
+    renderCustomBelt();
+    hideOverlay("builder-overlay");
+    draft = null;
+    openCard(planet.id);
+  }
+
+  function askConfirm(message, okLabel) {
+    return new Promise((resolve) => {
+      $("confirm-msg").textContent = message;
+      $("confirm-ok").textContent = okLabel || "지울게요";
+      const finish = (val) => {
+        $("confirm-ok").onclick = null;
+        $("confirm-cancel").onclick = null;
+        hideOverlay("confirm-overlay");
+        resolve(val);
+      };
+      $("confirm-ok").onclick = () => finish(true);
+      $("confirm-cancel").onclick = () => finish(false);
+      showOverlay("confirm-overlay");
+    });
+  }
+
+  async function deletePlanet(id) {
+    const p = customs.find((c) => c.id === id);
+    const ok = await askConfirm((p ? p.name : "이 행성") + "을 지울까요? 다시 되돌릴 수 없어요.");
+    if (!ok) return;
+    const list = customs.filter((c) => c.id !== id);
+    if (!saveCustoms(list)) return;
+    renderCustomBelt();
+    hideOverlay("confirm-overlay");
+    hideOverlay("builder-overlay");
+    hideOverlay("card-overlay");
+    draft = null;
+    openId = null;
+  }
+
+  function getExifOrientation(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = function () {
+        try {
+          const view = new DataView(reader.result);
+          if (view.getUint16(0, false) !== 0xFFD8) return resolve(1);
+          const length = view.byteLength;
+          let offset = 2;
+          while (offset < length) {
+            const marker = view.getUint16(offset, false);
+            offset += 2;
+            if (marker === 0xFFE1) {
+              if (view.getUint32(offset += 2, false) !== 0x45786966) return resolve(1);
+              const little = view.getUint16(offset += 6, false) === 0x4949;
+              offset += view.getUint32(offset + 4, little);
+              const tags = view.getUint16(offset, little);
+              offset += 2;
+              for (let i = 0; i < tags; i++) {
+                if (view.getUint16(offset + i * 12, little) === 0x0112) {
+                  return resolve(view.getUint16(offset + i * 12 + 8, little));
+                }
+              }
+            } else if ((marker & 0xFF00) !== 0xFF00) break;
+            else offset += view.getUint16(offset, false);
+          }
+        } catch (e) { /* ignore */ }
+        resolve(1);
+      };
+      reader.onerror = function () { resolve(1); };
+      reader.readAsArrayBuffer(file.slice(0, 64 * 1024));
+    });
+  }
+
+  function applyOrientation(ctx, w, h, ori) {
+    switch (ori) {
+      case 2: ctx.translate(w, 0); ctx.scale(-1, 1); break;
+      case 3: ctx.translate(w, h); ctx.rotate(Math.PI); break;
+      case 4: ctx.translate(0, h); ctx.scale(1, -1); break;
+      case 5: ctx.rotate(0.5 * Math.PI); ctx.scale(1, -1); break;
+      case 6: ctx.rotate(0.5 * Math.PI); ctx.translate(0, -h); break;
+      case 7: ctx.rotate(0.5 * Math.PI); ctx.translate(w, -h); ctx.scale(-1, 1); break;
+      case 8: ctx.rotate(-0.5 * Math.PI); ctx.translate(-w, 0); break;
+    }
+  }
+
+  function compressImage(file, maxSize, quality) {
+    maxSize = maxSize || 300;
+    quality = quality == null ? 0.82 : quality;
+    return getExifOrientation(file).then((ori) => new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function () {
+        try {
+          const w = img.naturalWidth;
+          const h = img.naturalHeight;
+          const swap = ori >= 5 && ori <= 8;
+          const vw = swap ? h : w;
+          const vh = swap ? w : h;
+          const side = Math.min(vw, vh);
+          const sx = (vw - side) / 2;
+          const sy = (vh - side) / 2;
+          const canvas = document.createElement("canvas");
+          canvas.width = maxSize;
+          canvas.height = maxSize;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, maxSize, maxSize);
+          ctx.save();
+          if (ori && ori !== 1) {
+            const tmp = document.createElement("canvas");
+            tmp.width = vw;
+            tmp.height = vh;
+            const tctx = tmp.getContext("2d");
+            tctx.save();
+            applyOrientation(tctx, w, h, ori);
+            tctx.drawImage(img, 0, 0);
+            tctx.restore();
+            ctx.drawImage(tmp, sx, sy, side, side, 0, 0, maxSize, maxSize);
+          } else {
+            ctx.drawImage(img, sx, sy, side, side, 0, 0, maxSize, maxSize);
+          }
+          ctx.restore();
+          const data = canvas.toDataURL("image/jpeg", quality);
+          URL.revokeObjectURL(url);
+          resolve(data);
+        } catch (e) {
+          URL.revokeObjectURL(url);
+          reject(e);
+        }
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("이미지를 읽지 못했어요."));
+      };
+      img.src = url;
+    }));
+  }
+
+  async function handlePlanetPhoto(file) {
+    if (!file || !draft) return;
+    try {
+      draft.photo = await compressImage(file, 300, 0.82);
+      updatePhotoUI();
+    } catch {
+      showToast("사진을 불러오지 못했어요. 다른 사진으로 해 주세요.");
+    }
+  }
+
   function bindUI() {
     $("btn-galaxy").addEventListener("click", () => openCard("galaxy"));
     $("btn-stamps").addEventListener("click", openAlbum);
     $("btn-quiz").addEventListener("click", startQuiz);
+    $("btn-make-planet").addEventListener("click", () => openBuilder(null));
+    $("btn-edit-planet").addEventListener("click", () => {
+      const p = customs.find((c) => c.id === openId);
+      if (!p) return;
+      closeCard();
+      openBuilder(p);
+    });
+    $("btn-save-planet").addEventListener("click", saveDraftPlanet);
+    $("btn-builder-close").addEventListener("click", () => {
+      draft = null;
+      hideOverlay("builder-overlay");
+    });
+    $("btn-delete-planet").addEventListener("click", () => {
+      const id = (draft && draft.id) || openId;
+      if (id) deletePlanet(id);
+    });
+    $("btn-random-name").addEventListener("click", () => {
+      $("planet-name").value = randomPlanetName();
+    });
+    $("btn-preset-name").addEventListener("click", () => {
+      $("planet-name").value = "우리 아이 행성";
+    });
+    $("planet-name").addEventListener("input", () => {
+      if (draft) draft.name = $("planet-name").value.slice(0, 16);
+    });
+    $("builder-opts").addEventListener("click", (e) => {
+      const rand = e.target.closest("[data-rand-moon]");
+      if (rand) {
+        syncMoonNamesFromDom();
+        const i = Number(rand.dataset.randMoon);
+        draft.moonNames[i] = randomMoonName(draft.moonNames);
+        renderBuilderOpts();
+        updateBuilderPreview();
+        return;
+      }
+      const btn = e.target.closest("[data-k]");
+      if (!btn) return;
+      let v = btn.dataset.v;
+      if (btn.dataset.k === "ring") v = v === "true";
+      else if (btn.dataset.k === "moons") v = Number(v);
+      applyDraftKey(btn.dataset.k, v);
+    });
+    $("builder-opts").addEventListener("input", (e) => {
+      if (e.target.matches("input[data-moon]")) {
+        const i = Number(e.target.dataset.moon);
+        draft.moonNames[i] = e.target.value.slice(0, 10);
+        updateBuilderPreview();
+      }
+    });
+    $("btn-take-photo").addEventListener("click", () => $("planet-photo-input").click());
+    $("btn-clear-photo").addEventListener("click", () => {
+      if (!draft) return;
+      draft.photo = null;
+      $("planet-photo-input").value = "";
+      updatePhotoUI();
+    });
+    $("planet-photo-input").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      handlePlanetPhoto(file);
+      e.target.value = "";
+    });
     $("btn-close").addEventListener("click", closeCard);
     $("btn-speak").addEventListener("click", toggleSpeak);
     $("btn-album-close").addEventListener("click", () => hideOverlay("album-overlay"));
@@ -721,10 +1507,21 @@
     $("quiz-overlay").addEventListener("click", (e) => {
       if (e.target === $("quiz-overlay")) hideOverlay("quiz-overlay");
     });
+    $("builder-overlay").addEventListener("click", (e) => {
+      if (e.target === $("builder-overlay")) {
+        draft = null;
+        hideOverlay("builder-overlay");
+      }
+    });
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
-      if (!$("card-overlay").hidden) closeCard();
+      if (!$("confirm-overlay").hidden) $("confirm-cancel").click();
+      else if (!$("card-overlay").hidden) closeCard();
+      else if (!$("builder-overlay").hidden) {
+        draft = null;
+        hideOverlay("builder-overlay");
+      }
       else if (!$("album-overlay").hidden) hideOverlay("album-overlay");
       else if (!$("quiz-overlay").hidden) hideOverlay("quiz-overlay");
     });
@@ -755,6 +1552,7 @@
     updateVisitedMarks();
     showIntroIfNeeded();
     registerSW();
+    window.__kidsSpaceTest = { stripForSpeech, speechText, getBody, loadCustoms };
   }
 
   if (document.readyState === "loading") {

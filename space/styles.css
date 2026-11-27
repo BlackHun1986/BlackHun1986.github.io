@@ -52,6 +52,7 @@ body {
   touch-action: manipulation;
 }
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+input, textarea { font: inherit; color: inherit; user-select: text; -webkit-user-select: text; }
 .display { font-family: "Jua", "Apple SD Gothic Neo", sans-serif; letter-spacing: 0.02em; }
 
 /* ---------- sky ---------- */
@@ -155,15 +156,20 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
   border-color: #F0B422;
 }
 .chip .count { font-family: "Jua", sans-serif; font-size: 18px; }
+.chip.make {
+  background: linear-gradient(180deg, #D4B8FF, #9B7EDE);
+  color: #2A1654;
+  border-color: #8A6AD0;
+}
 
 .stage {
   position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 8px 8px;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 4px 8px 0;
 }
 
 .hint {
@@ -173,9 +179,10 @@ button { font: inherit; color: inherit; cursor: pointer; border: none; backgroun
 /* ---------- solar system ---------- */
 .system {
   position: relative;
+  flex: 1;
   width: 100%;
-  height: 100%;
-  max-height: 100%;
+  min-height: 0;
+  height: auto;
 }
 .orbit-deco {
   position: absolute;
@@ -659,15 +666,18 @@ body.paused .system > .body,
 body.paused .moon-orbit,
 body.paused .moon-orbit .body,
 body.paused .sun-glow,
-body.paused .shooting-star {
+body.paused .shooting-star,
+body.paused .c-moon-orbit {
   animation-play-state: paused;
 }
 
 /* ---------- layout: landscape ---------- */
 @media (orientation: landscape) {
-  .topbar { min-height: 56px; padding: 6px 16px 2px; }
+  .topbar { min-height: 52px; padding: 6px 16px 2px; }
   .topbar h1 { font-size: clamp(22px, 4.4vh, 34px); }
-  .chip { min-height: 46px; font-size: 15px; }
+  .chip { min-height: 44px; font-size: 15px; padding: 0 12px; }
+  .stage { flex-direction: row; padding: 2px 8px 6px; }
+  .system { flex: 1; }
   .card {
     display: grid;
     grid-template-columns: 200px 1fr;
@@ -707,3 +717,363 @@ body.paused .shooting-star {
     transform: translate(-50%, -50%);
   }
 }
+
+
+/* ---------- custom planet belt ---------- */
+.custom-belt {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px 10px;
+  min-height: 118px;
+  z-index: 4;
+  background: linear-gradient(180deg, transparent, rgba(8, 10, 28, 0.35));
+}
+.belt-label {
+  margin: 0;
+  writing-mode: horizontal-tb;
+  font-size: 15px;
+  color: #E2D4FF;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px #000;
+  flex-shrink: 0;
+}
+.belt-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 2px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.belt-empty {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: 14px;
+  align-self: center;
+}
+.custom-cluster {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--belt-w, 88px);
+}
+.custom-cluster .body {
+  filter: drop-shadow(0 0 8px rgba(200, 180, 255, 0.45));
+}
+.custom-cluster .planet-name {
+  font-size: 13px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.c-moon-orbit {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 78px;
+  height: 78px;
+  margin: -39px 0 0 -39px;
+  animation: moon-spin 9s linear infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+.c-moon {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(-34px) rotate(calc(-1 * var(--a, 0deg)));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.c-moon-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #C5C7CE 60%, #8E8F98);
+  box-shadow: 0 0 4px rgba(255,255,255,0.5);
+}
+.c-moon-name {
+  font-family: "Jua", sans-serif;
+  font-size: 11px;
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  margin-top: 1px;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (orientation: landscape) {
+  .custom-belt {
+    flex-direction: column;
+    width: 138px;
+    min-height: 0;
+    height: 100%;
+    padding: 4px 6px 4px 2px;
+    background: linear-gradient(90deg, transparent, rgba(8, 10, 28, 0.35));
+  }
+  .belt-label { font-size: 14px; }
+  .belt-row {
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1;
+    width: 100%;
+    gap: 8px;
+  }
+  .custom-cluster { width: 96px; }
+}
+
+/* ---------- explorer photo / helmet ---------- */
+.astro-frame {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #9ad4ff 0%, #1a3a66 75%, #0b1a30 100%);
+  border: 6px solid #d9e6f2;
+  box-shadow:
+    0 0 0 3px #8aa0b8,
+    0 4px 10px rgba(0,0,0,0.35),
+    inset 0 -8px 16px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+.astro-frame::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 36%;
+  height: 22%;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.45);
+  pointer-events: none;
+  z-index: 1;
+}
+.astro-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+.explorer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+.explorer p {
+  margin: 0;
+  font-family: "Jua", sans-serif;
+  font-size: 14px;
+  color: var(--card-soft);
+}
+.explorer[hidden] { display: none !important; }
+
+/* ---------- builder ---------- */
+.builder, .confirm-box {
+  width: min(880px, 100%);
+  max-height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  color: var(--card-ink);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  padding: 16px 16px 12px;
+  animation: pop 0.32s ease;
+}
+.builder h2, .confirm-box .display { margin: 0; text-align: center; font-size: clamp(24px, 4.4vmin, 36px); }
+.builder-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.builder-preview-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.preview-wrap {
+  width: min(200px, 42vw);
+  height: min(140px, 22vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-wrap .planet-art,
+.preview-wrap svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2));
+}
+.name-input {
+  width: 100%;
+  max-width: 280px;
+  min-height: 48px;
+  border: 3px solid #E8D9B8;
+  border-radius: 14px;
+  padding: 6px 12px;
+  background: #FFFDF8;
+  font-family: "Jua", sans-serif;
+  font-size: 20px;
+  text-align: center;
+}
+.name-input:focus { outline: 3px solid #9B7EDE; border-color: #9B7EDE; }
+.name-btns, .photo-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.mini {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #FFF3DC;
+  font-family: "Jua", sans-serif;
+  font-size: 15px;
+  color: var(--card-ink);
+  border: 2px solid transparent;
+}
+.mini:active { transform: scale(0.97); }
+.mini.on { background: #E8D4FF; border-color: #9B7EDE; }
+.photo-block { text-align: center; }
+.builder-opts {
+  overflow: auto;
+  min-height: 0;
+  padding: 2px 2px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.opt-group { margin: 0 0 10px; }
+.opt-label {
+  margin: 0 0 6px;
+  font-family: "Jua", sans-serif;
+  font-size: 16px;
+  color: #6B5A1A;
+}
+.opt-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pick {
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: #FFF3DC;
+  font-family: "Jua", sans-serif;
+  font-size: 16px;
+  color: var(--card-ink);
+  border: 3px solid transparent;
+}
+.pick.on { border-color: #6B4CE0; background: #EFE6FF; }
+.swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #D8CCB8;
+  padding: 0;
+}
+.swatch.on { box-shadow: 0 0 0 3px #6B4CE0; transform: scale(1.08); }
+.moon-names { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.moon-name-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.moon-name-row span { font-family: "Jua", sans-serif; font-size: 14px; white-space: nowrap; }
+.moon-name-row input {
+  flex: 1;
+  min-height: 42px;
+  border: 2px solid #E8D9B8;
+  border-radius: 12px;
+  padding: 4px 10px;
+  background: #FFFDF8;
+  font-size: 16px;
+}
+.builder-msg {
+  margin: 4px 0 0;
+  text-align: center;
+  font-weight: 700;
+  color: #9A2A2A;
+  font-size: 15px;
+}
+.builder-msg[hidden] { display: none !important; }
+.btn-edit {
+  background: #EFE6FF;
+  color: #3A2460;
+  flex: 0.8;
+}
+.btn-danger {
+  background: linear-gradient(180deg, #FF9A9A, #E85A5A);
+  color: #fff;
+  box-shadow: 0 4px 0 #C24A4A;
+  flex: 0.75;
+}
+.confirm-box { width: min(420px, 100%); padding: 24px 20px 16px; }
+.confirm-box p { margin: 0 0 16px; text-align: center; font-size: 24px; line-height: 1.4; }
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + var(--safe-b));
+  transform: translateX(-50%);
+  z-index: 40;
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: #2A241C;
+  color: #FFF9EF;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: var(--shadow);
+  max-width: min(480px, 92vw);
+  text-align: center;
+}
+.toast[hidden] { display: none !important; }
+
+@media (orientation: landscape) {
+  .builder-grid {
+    grid-template-columns: 240px 1fr;
+    gap: 14px;
+    overflow: hidden;
+  }
+  .preview-wrap { width: 200px; height: 120px; }
+  .builder-preview-col { overflow: auto; }
+  .builder .opt-group { margin-bottom: 6px; }
+  .builder .pick { min-height: 42px; }
+  .builder .moon-name-row input { min-height: 38px; }
+  .builder h2 { font-size: 28px; }
+  .builder .sub { margin-bottom: 8px; }
+  .card .explorer { margin-top: 10px; }
+  .card .astro-frame { width: 72px; height: 72px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-moon-orbit { animation: none !important; }
+}
+
+.builder:not(.is-editing) #btn-delete-planet { display: none !important; }

@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="우리 태양계">
-  <meta name="description" content="6살도 쉽게 배우는 태양계와 우리은하 탐험">
+  <meta name="description" content="6살도 쉽게 배우는 태양계와 우리은하 탐험, 나만의 상상 행성 만들기">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -29,6 +29,7 @@
           <span class="hide-narrow">도장</span>
         </button>
         <button type="button" class="chip gold" id="btn-quiz" aria-label="퀴즈 시작">퀴즈</button>
+        <button type="button" class="chip make" id="btn-make-planet" aria-label="나만의 행성 만들기">✨ <span class="hide-narrow">행성 </span>만들기</button>
       </div>
     </header>
 
@@ -39,6 +40,10 @@
         <span class="visited-mark" hidden>✓</span>
       </button>
       <div id="system" class="system" aria-label="태양계"></div>
+      <aside class="custom-belt" id="custom-belt" aria-label="내 행성">
+        <p class="belt-label display">내 행성</p>
+        <div class="belt-row" id="custom-planets"></div>
+      </aside>
       <p class="hint" id="hint">행성을 눌러 보세요!</p>
     </main>
   </div>
@@ -47,6 +52,12 @@
     <article class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
       <div class="card-hero">
         <div class="planet-art" id="card-art" aria-hidden="true"></div>
+        <div class="explorer" id="card-explorer" hidden>
+          <div class="astro-frame">
+            <img id="card-photo" alt="행성을 만든 탐험가">
+          </div>
+          <p>행성을 만든 탐험가</p>
+        </div>
       </div>
       <div class="card-copy">
         <p class="card-kicker" id="card-kicker"></p>
@@ -58,6 +69,7 @@
       </div>
       <div class="card-actions">
         <button type="button" class="btn btn-speak" id="btn-speak">🔊 읽어 줘</button>
+        <button type="button" class="btn btn-edit" id="btn-edit-planet" hidden>바꾸기</button>
         <button type="button" class="btn btn-close" id="btn-close">닫기</button>
       </div>
     </article>
@@ -104,6 +116,55 @@
       <button type="button" class="btn display" id="btn-intro">좋아!</button>
     </div>
   </div>
+
+  <div class="overlay" id="builder-overlay" hidden>
+    <div class="builder" role="dialog" aria-modal="true" aria-labelledby="builder-title">
+      <h2 class="display" id="builder-title">나만의 행성 만들기</h2>
+      <p class="sub">상상의 행성을 만들어요. 진짜 태양계 행성은 아니에요!</p>
+      <div class="builder-grid">
+        <div class="builder-preview-col">
+          <div class="preview-wrap" id="builder-preview" aria-hidden="true"></div>
+          <label class="opt-label" for="planet-name">이름</label>
+          <input type="text" id="planet-name" class="name-input" maxlength="16" placeholder="행성 이름" autocomplete="off" enterkeyhint="done">
+          <div class="name-btns">
+            <button type="button" class="mini" id="btn-random-name">랜덤 이름</button>
+            <button type="button" class="mini" id="btn-preset-name">우리 아이 행성</button>
+          </div>
+          <div class="photo-block">
+            <p class="opt-label">행성을 만든 탐험가</p>
+            <div class="astro-frame" id="photo-frame">
+              <img id="photo-preview" alt="" hidden>
+              <span class="photo-placeholder" id="photo-placeholder">🙂</span>
+            </div>
+            <input id="planet-photo-input" type="file" accept="image/*" capture="user" hidden>
+            <div class="photo-actions">
+              <button type="button" class="mini" id="btn-take-photo">사진 찍기</button>
+              <button type="button" class="mini" id="btn-clear-photo" hidden>사진 지우기</button>
+            </div>
+          </div>
+        </div>
+        <div class="builder-opts" id="builder-opts"></div>
+      </div>
+      <p class="builder-msg" id="builder-msg" hidden></p>
+      <div class="card-actions">
+        <button type="button" class="btn btn-speak" id="btn-save-planet">저장</button>
+        <button type="button" class="btn btn-danger" id="btn-delete-planet" hidden>삭제</button>
+        <button type="button" class="btn btn-close" id="btn-builder-close">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="confirm-overlay" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-msg">
+      <p class="display" id="confirm-msg"></p>
+      <div class="card-actions">
+        <button type="button" class="btn btn-danger" id="confirm-ok">지울게요</button>
+        <button type="button" class="btn btn-close" id="confirm-cancel">아니요</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="toast" id="toast" hidden></p>
 
   <script src="app.js"></script>
 </body>
