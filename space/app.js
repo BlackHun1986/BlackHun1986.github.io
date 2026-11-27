@@ -770,7 +770,6 @@
     { id: "#C9B0FF", name: "보라" }
   ];
   const PLANET_NAMES = ["솜사탕별", "무지개별", "반짝이별", "초코별", "젤리별", "구름빵별", "별사탕별", "햇살별", "달콤별", "푸른꿈별", "웃음별", "마법별", "뽀로롱별", "하늘솜별", "용감별", "꿈틀별", "사탕행성", "별방울"];
-  const MOON_NAMES = ["꼬마달", "초코달", "별달", "솜달", "반짝달", "구름달", "젤리달", "달님이", "초승이", "보름이", "하트달", "방울달"];
   const BELT_SIZE = {
     small: "clamp(50px, 7vmin, 62px)",
     medium: "clamp(62px, 8.8vmin, 80px)",
@@ -815,9 +814,6 @@
 
   function normalizeCustom(p) {
     const moons = Math.max(0, Math.min(3, Number(p.moons) || 0));
-    let moonNames = Array.isArray(p.moonNames) ? p.moonNames.map((n) => String(n || "").trim()) : [];
-    while (moonNames.length < moons) moonNames.push(randomMoonName(moonNames));
-    moonNames = moonNames.slice(0, moons).map((n, i) => n || "달 " + (i + 1));
     return {
       id: String(p.id),
       name: String(p.name || "").trim().slice(0, 16) || "상상 행성",
@@ -827,7 +823,6 @@
       ring: !!p.ring,
       ringColor: RING_COLORS.some((c) => c.id === p.ringColor) ? p.ringColor : "#E8D4A0",
       moons,
-      moonNames,
       face: FACES.some((f) => f.id === p.face) ? p.face : "smile",
       temp: TEMPS.some((x) => x.id === p.temp) ? p.temp : "warm",
       who: WHOS.some((x) => x.id === p.who) ? p.who : "kids",
@@ -902,10 +897,6 @@
     if (draft && draft.name) used.push(draft.name);
     return randomFrom(PLANET_NAMES, used);
   }
-  function randomMoonName(avoid) {
-    return randomFrom(MOON_NAMES, avoid);
-  }
-
   function shade(hex, amt) {
     const n = hex.replace("#", "");
     const ch = (i) => {
@@ -1002,9 +993,7 @@
         const a = (angs[i] * Math.PI) / 180;
         const mx = cx + Math.cos(a) * (r + 28);
         const my = cy + Math.sin(a) * (r * 0.7 + 20);
-        const label = escapeHtml((p.moonNames[i] || "달").slice(0, 6));
-        moons += `<circle cx="${mx}" cy="${my}" r="7" fill="url(#moondot${x})"/>
-          <text x="${mx}" y="${my + 16}" text-anchor="middle" font-size="9" fill="#3A3228" font-family="Jua, sans-serif">${label}</text>`;
+        moons += `<circle cx="${mx}" cy="${my}" r="7" fill="url(#moondot${x})"/>`;
       }
     }
     return `<svg viewBox="${vb}" aria-hidden="true">
@@ -1031,11 +1020,7 @@
   function customToBody(p) {
     const t = tempInfo(p.temp);
     const w = whoInfo(p.who);
-    const moonPart = p.moons
-      ? (p.moons === 1
-        ? `달이 하나 있어요. 이름은 ${p.moonNames[0] || "달"}이에요.`
-        : `달이 ${p.moons}개 있어요. 이름은 ${p.moonNames.join(", ")}이에요.`)
-      : "달은 없어요.";
+    const moonPart = p.moons ? `달이 ${p.moons}개 있어요.` : "달은 없어요.";
     const ringPart = p.ring
       ? `${ringColorName(p.ringColor)} 고리가 빙글빙글 둘러싸여 있어요.`
       : "고리는 없어요.";
@@ -1083,7 +1068,6 @@
       ring: false,
       ringColor: "#E8D4A0",
       moons: 1,
-      moonNames: [randomMoonName()],
       face: "smile",
       temp: "warm",
       who: "kids",
@@ -1128,7 +1112,7 @@
           const moon = document.createElement("span");
           moon.className = "c-moon";
           moon.style.setProperty("--a", i * (360 / pl.moons) + "deg");
-          moon.innerHTML = `<span class="c-moon-dot"></span><span class="c-moon-name">${escapeHtml(pl.moonNames[i] || "달")}</span>`;
+          moon.innerHTML = `<span class="c-moon-dot"></span>`;
           orbit.appendChild(moon);
         }
         cluster.appendChild(orbit);
@@ -1152,37 +1136,17 @@
     const ringBlock = draft.ring
       ? `<div class="opt-group"><p class="opt-label">고리 색깔</p><div class="opt-picks">${picksHtml(RING_COLORS, "ringColor", (c) => c.id, (c) => c.name, true)}</div></div>`
       : "";
-    let moonBlock = "";
-    if (draft.moons > 0) {
-      const rows = [];
-      for (let i = 0; i < draft.moons; i++) {
-        rows.push(`<div class="moon-name-row">
-          <span>달 ${i + 1}</span>
-          <input type="text" data-moon="${i}" maxlength="10" value="${escapeHtml(draft.moonNames[i] || "")}" placeholder="달 이름" autocomplete="off">
-          <button type="button" class="mini" data-rand-moon="${i}">랜덤</button>
-        </div>`);
-      }
-      moonBlock = `<div class="moon-names" id="moon-names">${rows.join("")}</div>`;
-    }
     $("builder-opts").innerHTML = `
       <div class="opt-group"><p class="opt-label">색깔</p><div class="opt-picks">${picksHtml(COLORS, "color", (c) => c.id, (c) => c.name, true)}</div></div>
       <div class="opt-group"><p class="opt-label">크기</p><div class="opt-picks">${picksHtml(SIZES, "size", (s) => s.id, (s) => s.name)}</div></div>
       <div class="opt-group"><p class="opt-label">표면 무늬</p><div class="opt-picks">${picksHtml(PATTERNS, "pattern", (s) => s.id, (s) => s.name)}</div></div>
       <div class="opt-group"><p class="opt-label">고리</p><div class="opt-picks">${picksHtml([{ id: true, name: "있어요" }, { id: false, name: "없어요" }], "ring", (s) => s.id, (s) => s.name)}</div></div>
       ${ringBlock}
-      <div class="opt-group"><p class="opt-label">달</p><div class="opt-picks">${picksHtml([0, 1, 2, 3].map((n) => ({ id: n, name: n === 0 ? "없음" : n + "개" })), "moons", (s) => s.id, (s) => s.name)}</div>${moonBlock}</div>
+      <div class="opt-group"><p class="opt-label">달</p><div class="opt-picks">${picksHtml([0, 1, 2, 3].map((n) => ({ id: n, name: n === 0 ? "없음" : n + "개" })), "moons", (s) => s.id, (s) => s.name)}</div></div>
       <div class="opt-group"><p class="opt-label">얼굴 스티커</p><div class="opt-picks">${picksHtml(FACES, "face", (s) => s.id, (s) => s.name)}</div></div>
       <div class="opt-group"><p class="opt-label">더울까, 추울까?</p><div class="opt-picks">${picksHtml(TEMPS, "temp", (s) => s.id, (s) => s.name)}</div></div>
       <div class="opt-group"><p class="opt-label">누가 살까?</p><div class="opt-picks">${picksHtml(WHOS, "who", (s) => s.id, (s) => s.name)}</div></div>
     `;
-  }
-
-  function syncMoonNamesFromDom() {
-    if (!draft) return;
-    document.querySelectorAll("#moon-names input[data-moon]").forEach((inp) => {
-      const i = Number(inp.dataset.moon);
-      draft.moonNames[i] = inp.value.slice(0, 10);
-    });
   }
 
   function updateBuilderPreview() {
@@ -1217,7 +1181,7 @@
 
   function openBuilder(existing) {
     stopSpeak();
-    draft = existing ? { ...existing, moonNames: existing.moonNames.slice() } : emptyDraft();
+    draft = existing ? { ...existing } : emptyDraft();
     $("builder-title").textContent = existing ? "상상 행성 바꾸기" : "나만의 행성 만들기";
     $("planet-name").value = draft.name;
     $("btn-delete-planet").hidden = !existing;
@@ -1233,35 +1197,22 @@
   }
 
   function applyDraftKey(key, value) {
-    syncMoonNamesFromDom();
     if (key === "ring") draft.ring = value === true || value === "true";
-    else if (key === "moons") {
-      const n = Number(value);
-      draft.moons = n;
-      while (draft.moonNames.length < n) draft.moonNames.push(randomMoonName(draft.moonNames));
-      draft.moonNames = draft.moonNames.slice(0, n);
-    } else {
-      draft[key] = value;
-    }
+    else if (key === "moons") draft.moons = Number(value);
+    else draft[key] = value;
     renderBuilderOpts();
     updateBuilderPreview();
   }
 
   function saveDraftPlanet() {
-    syncMoonNamesFromDom();
     let name = ($("planet-name").value || "").trim().slice(0, 16);
     if (!name) name = randomPlanetName();
     draft.name = name;
     $("planet-name").value = name;
-    const moonNames = [];
-    for (let i = 0; i < draft.moons; i++) {
-      moonNames.push((draft.moonNames[i] || "").trim().slice(0, 10) || "달 " + (i + 1));
-    }
     const planet = normalizeCustom({
       ...draft,
       id: draft.id || "custom-" + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36),
-      name,
-      moonNames
+      name
     });
     const list = customs.slice();
     const idx = list.findIndex((p) => p.id === planet.id);
@@ -1452,28 +1403,12 @@
       if (draft) draft.name = $("planet-name").value.slice(0, 16);
     });
     $("builder-opts").addEventListener("click", (e) => {
-      const rand = e.target.closest("[data-rand-moon]");
-      if (rand) {
-        syncMoonNamesFromDom();
-        const i = Number(rand.dataset.randMoon);
-        draft.moonNames[i] = randomMoonName(draft.moonNames);
-        renderBuilderOpts();
-        updateBuilderPreview();
-        return;
-      }
       const btn = e.target.closest("[data-k]");
       if (!btn) return;
       let v = btn.dataset.v;
       if (btn.dataset.k === "ring") v = v === "true";
       else if (btn.dataset.k === "moons") v = Number(v);
       applyDraftKey(btn.dataset.k, v);
-    });
-    $("builder-opts").addEventListener("input", (e) => {
-      if (e.target.matches("input[data-moon]")) {
-        const i = Number(e.target.dataset.moon);
-        draft.moonNames[i] = e.target.value.slice(0, 10);
-        updateBuilderPreview();
-      }
     });
     $("btn-take-photo").addEventListener("click", () => $("planet-photo-input").click());
     $("btn-clear-photo").addEventListener("click", () => {
