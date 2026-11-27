@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="38%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#2A1B64"/>
+      <stop offset="55%" stop-color="#12183A"/>
+      <stop offset="100%" stop-color="#070B1C"/>
+    </radialGradient>
+    <radialGradient id="sun" cx="35%" cy="32%" r="65%">
+      <stop offset="0%" stop-color="#FFF6C8"/>
+      <stop offset="35%" stop-color="#FFE14A"/>
+      <stop offset="75%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#FF8A00"/>
+    </radialGradient>
+    <radialGradient id="earth" cx="38%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#9FE8FF"/>
+      <stop offset="45%" stop-color="#3D8DE0"/>
+      <stop offset="100%" stop-color="#1A4F9C"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <circle cx="86" cy="78" r="4" fill="#FFF8E7" opacity="0.95"/>
+  <circle cx="430" cy="92" r="3.2" fill="#FFF" opacity="0.85"/>
+  <circle cx="70" cy="400" r="3.5" fill="#D6E8FF" opacity="0.9"/>
+  <circle cx="460" cy="430" r="4.2" fill="#FFF6C8" opacity="0.9"/>
+  <circle cx="400" cy="200" r="2.4" fill="#FFF" opacity="0.75"/>
+  <circle cx="140" cy="460" r="2.2" fill="#FFF" opacity="0.7"/>
+  <circle cx="250" cy="56" r="2.6" fill="#FFE9A0" opacity="0.85"/>
+  <circle cx="40" cy="230" r="2" fill="#FFF" opacity="0.65"/>
+  <g filter="url(#glow)">
+    <circle cx="256" cy="250" r="128" fill="url(#sun)"/>
+  </g>
+  <g fill="none" stroke="#FFD56A" stroke-width="6" opacity="0.55" stroke-linecap="round">
+    <path d="M256 102 v-28"/>
+    <path d="M256 426 v28"/>
+    <path d="M102 250 h-28"/>
+    <path d="M410 250 h28"/>
+    <path d="M148 142 l-20-20"/>
+    <path d="M364 358 l20 20"/>
+    <path d="M148 358 l-20 20"/>
+    <path d="M364 142 l20-20"/>
+  </g>
+  <circle cx="378" cy="368" r="58" fill="url(#earth)"/>
+  <path fill="#4BB36A" d="M348 350 c18-10 30-8 46 4 8 6 22 4 28-6 2 14-2 28-14 38-16 14-36 10-50-2-10-8-16-20-10-34z"/>
+  <path fill="#57C278" d="M350 392 c16 8 34 6 44-8 4 16-8 30-24 34-16 4-26-6-20-26z"/>
+  <ellipse cx="360" cy="338" rx="16" ry="7" fill="#F4FBFF" opacity="0.7"/>
+  <circle cx="400" cy="348" r="5" fill="#F4FBFF" opacity="0.45"/>
+</svg>

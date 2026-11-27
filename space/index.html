@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#12183A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="우리 태양계">
+  <meta name="description" content="6살도 쉽게 배우는 태양계와 우리은하 탐험">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>우리 태양계</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="nebula" aria-hidden="true"></div>
+  <div id="stars" class="stars" aria-hidden="true"></div>
+  <div class="shooting-star" aria-hidden="true"></div>
+
+  <div id="app">
+    <header class="topbar">
+      <h1 class="display">우리 태양계</h1>
+      <div class="top-actions">
+        <button type="button" class="chip" id="btn-stamps" aria-label="탐험 도장">
+          🏅 <span class="count" id="stamp-count">0/12</span>
+          <span class="hide-narrow">도장</span>
+        </button>
+        <button type="button" class="chip gold" id="btn-quiz" aria-label="퀴즈 시작">퀴즈</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <button type="button" class="galaxy-btn" id="btn-galaxy" data-id="galaxy" aria-label="우리은하">
+        <span class="planet-art" id="galaxy-art" aria-hidden="true"></span>
+        <span class="planet-name">우리은하</span>
+        <span class="visited-mark" hidden>✓</span>
+      </button>
+      <div id="system" class="system" aria-label="태양계"></div>
+      <p class="hint" id="hint">행성을 눌러 보세요!</p>
+    </main>
+  </div>
+
+  <div class="overlay" id="card-overlay" hidden>
+    <article class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
+      <div class="card-hero">
+        <div class="planet-art" id="card-art" aria-hidden="true"></div>
+      </div>
+      <div class="card-copy">
+        <p class="card-kicker" id="card-kicker"></p>
+        <h2 class="display" id="card-title"></h2>
+        <p class="new-stamp" id="new-stamp">🏅 탐험 도장을 받았어요!</p>
+        <ul class="facts" id="card-facts"></ul>
+        <div class="fun" id="card-fun"></div>
+        <div class="meta" id="card-meta"></div>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="btn btn-speak" id="btn-speak">🔊 읽어 줘</button>
+        <button type="button" class="btn btn-close" id="btn-close">닫기</button>
+      </div>
+    </article>
+  </div>
+
+  <div class="overlay" id="album-overlay" hidden>
+    <div class="album" role="dialog" aria-modal="true" aria-labelledby="album-title">
+      <h2 class="display" id="album-title">탐험 도장</h2>
+      <p class="sub" id="album-sub"></p>
+      <div class="stamp-grid" id="stamp-grid"></div>
+      <p class="complete-banner" id="complete-banner">🌟 모든 곳을 탐험했어요! 너는 우주 탐험가예요!</p>
+      <div class="card-actions">
+        <button type="button" class="btn btn-close" id="btn-album-close">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="quiz-overlay" hidden>
+    <div class="quiz" role="dialog" aria-modal="true" aria-labelledby="quiz-title">
+      <h2 class="display" id="quiz-title">우주 퀴즈</h2>
+      <div id="quiz-play">
+        <div class="quiz-progress" id="quiz-progress"></div>
+        <p class="q-text" id="quiz-q"></p>
+        <div class="choices" id="quiz-choices"></div>
+        <p class="quiz-fb" id="quiz-fb"></p>
+      </div>
+      <div id="quiz-end" hidden>
+        <p class="quiz-score"><span class="big display" id="quiz-score"></span>문제를 맞혔어요!</p>
+        <p class="sub" id="quiz-end-msg"></p>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="btn btn-speak" id="btn-quiz-next" hidden>다음</button>
+        <button type="button" class="btn btn-speak" id="btn-quiz-retry" hidden>다시 하기</button>
+        <button type="button" class="btn btn-close" id="btn-quiz-close">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="intro-overlay" hidden>
+    <div class="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+      <div class="planet-art" id="intro-art" aria-hidden="true"></div>
+      <h2 class="display" id="intro-title">우주 탐험을 시작할까요?</h2>
+      <p>반짝이는 행성을 눌러 보세요.<br>쉬운 이야기로 알려 주고, 원하면 소리로도 들려줄게요.</p>
+      <button type="button" class="btn display" id="btn-intro">좋아!</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
