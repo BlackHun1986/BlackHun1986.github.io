@@ -1102,8 +1102,8 @@ body.paused .c-moon-orbit {
   height: auto;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.22));
 }
-.builder .astronaut-art { width: 100px; }
-.card .astronaut-art { width: 118px; }
+.builder .astronaut-art { width: 118px; }
+.card .astronaut-art { width: 136px; }
 .explorer-input { max-width: 240px; font-size: 18px; min-height: 44px; }
 .travel-block { width: 100%; text-align: center; margin-top: 6px; }
 .travel-row {
@@ -1181,8 +1181,8 @@ body.paused .c-moon-orbit {
 .cert-hint[hidden] { display: none !important; }
 
 @media (orientation: landscape) {
-  .card .astronaut-art { width: 100px; }
-  .builder .astronaut-art { width: 86px; }
+  .card .astronaut-art { width: 114px; }
+  .builder .astronaut-art { width: 100px; }
   .cert-preview-wrap img { max-height: min(58vh, 560px); }
   .builder .card-actions .btn-cert { flex: 1 1 100%; }
   .btn { font-size: 20px; }

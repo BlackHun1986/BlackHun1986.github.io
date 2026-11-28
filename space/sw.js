@@ -1,4 +1,4 @@
-const CACHE = "space-explore-v5";
+const CACHE = "space-explore-v6";
 const ASSETS = [
   "./",
   "./index.html",
