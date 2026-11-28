@@ -1461,131 +1461,120 @@
     }
   }
 
-  const ASTRO_VB_W = 260;
-  const ASTRO_VB_H = 360;
-  const ASTRO_VISOR = { cx: 152, cy: 120, r: 56 };
-  const ASTRO_INK = "#222222";
-  const ASTRO_SW = 3.5;
-  const ASTRO_TIGHT = { x: 22, y: 22, w: 224, h: 328 };
+  const ASTRO_VB_W = 533;
+  const ASTRO_VB_H = 1084;
+  const ASTRO_VISOR = { cx: 282.5, cy: 137.38, rx: 85, ry: 82.18, r: 83.59, rotation: 2.7811 };
+  const ASTRO_TIGHT = { x: 16, y: 16, w: 501, h: 1052 };
+  const ASTRO_SRC_WEBP = "assets/astronaut.webp";
+  const ASTRO_SRC_PNG = "assets/astronaut.png";
   const CERT_GAP = 36;
   const FUN_LABEL = "쉿! 나만 아는 비밀";
+  const SEAL_RING = { rxK: 1.34, ryK: 0.52, rot: -0.55, bandK: 0.40 };
 
-  function astroStroke() {
-    return `fill="#FFFFFF" stroke="${ASTRO_INK}" stroke-width="${ASTRO_SW}" stroke-linecap="round" stroke-linejoin="round"`;
-  }
-  function astroFillOnly(color) {
-    return `fill="${color}" stroke="none"`;
-  }
-
-  function svgCapsule(x1, y1, x2, y2, r) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const len = Math.hypot(dx, dy) || 1;
-    const ux = dx / len;
-    const uy = dy / len;
-    const px = -uy;
-    const py = ux;
-    const a1x = x1 + px * r, a1y = y1 + py * r;
-    const a2x = x1 - px * r, a2y = y1 - py * r;
-    const b1x = x2 + px * r, b1y = y2 + py * r;
-    const b2x = x2 - px * r, b2y = y2 - py * r;
-    return `M ${a1x.toFixed(2)} ${a1y.toFixed(2)} L ${b1x.toFixed(2)} ${b1y.toFixed(2)} A ${r} ${r} 0 0 1 ${b2x.toFixed(2)} ${b2y.toFixed(2)} L ${a2x.toFixed(2)} ${a2y.toFixed(2)} A ${r} ${r} 0 0 1 ${a1x.toFixed(2)} ${a1y.toFixed(2)} Z`;
+  let astroSuitPromise = null;
+  function preloadAstronautSuit() {
+    if (astroSuitPromise) return astroSuitPromise;
+    astroSuitPromise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => {
+        const fb = new Image();
+        fb.onload = () => resolve(fb);
+        fb.onerror = () => reject(new Error("우주복 그림을 불러오지 못했어요."));
+        fb.src = ASTRO_SRC_PNG;
+      };
+      img.src = ASTRO_SRC_WEBP;
+    });
+    return astroSuitPromise;
   }
 
-  function svgBand(x1, y1, x2, y2, r, fill) {
-    return `<path d="${svgCapsule(x1, y1, x2, y2, r)}" fill="${fill}" stroke="${ASTRO_INK}" stroke-width="${ASTRO_SW}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  function visorSlotStyle() {
+    const v = ASTRO_VISOR;
+    const left = ((v.cx - v.rx) / ASTRO_VB_W) * 100;
+    const top = ((v.cy - v.ry) / ASTRO_VB_H) * 100;
+    const w = (v.rx * 2 / ASTRO_VB_W) * 100;
+    const h = (v.ry * 2 / ASTRO_VB_H) * 100;
+    return "left:" + left.toFixed(3) + "%;top:" + top.toFixed(3) + "%;width:" + w.toFixed(3) + "%;height:" + h.toFixed(3) + "%";
   }
 
-  function defaultFaceSvg() {
-    const { cx, cy, r } = ASTRO_VISOR;
-    return `<circle cx="${cx}" cy="${cy + 4}" r="${r}" fill="#F8CDB0"/>
-      <path d="M${cx - 50} ${cy - 10} Q${cx} ${cy - 54} ${cx + 50} ${cy - 10} Q${cx + 28} ${cy - 22} ${cx} ${cy - 18} Q${cx - 28} ${cy - 22} ${cx - 50} ${cy - 10}Z" fill="#6B4124"/>
-      <ellipse cx="${cx - 18}" cy="${cy + 2}" rx="7.5" ry="9" fill="#2A1A12"/>
-      <ellipse cx="${cx + 18}" cy="${cy + 2}" rx="7.5" ry="9" fill="#2A1A12"/>
-      <ellipse cx="${cx - 16}" cy="${cy - 1}" rx="2.8" ry="3.2" fill="#fff"/>
-      <ellipse cx="${cx + 20}" cy="${cy - 1}" rx="2.2" ry="2.5" fill="#fff"/>
-      <ellipse cx="${cx - 30}" cy="${cy + 18}" rx="8" ry="4.5" fill="#F4A0A8" opacity=".55"/>
-      <ellipse cx="${cx + 30}" cy="${cy + 18}" rx="8" ry="4.5" fill="#F4A0A8" opacity=".55"/>
-      <path d="M${cx - 15} ${cy + 28} Q${cx} ${cy + 40} ${cx + 15} ${cy + 28}" fill="none" stroke="#C45A66" stroke-width="3.2" stroke-linecap="round"/>`;
+  function drawDefaultFace(ctx, w, h) {
+    const cx = w / 2, cy = h / 2 + h * 0.04, r = Math.min(w, h) * 0.48;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = "#F3C4A3";
+    ctx.fill();
+    ctx.fillStyle = "#6B4124";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - r * 0.55, r * 0.92, r * 0.42, 0, Math.PI, 0, true);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - r * 0.22, r * 0.95, r * 0.28, 0, Math.PI, 0, true);
+    ctx.fill();
+    const eyeY = cy + r * 0.02;
+    [[-0.32, 1], [0.32, 1]].forEach(([dx]) => {
+      ctx.fillStyle = "#2A1A12";
+      ctx.beginPath();
+      ctx.ellipse(cx + dx * r, eyeY, r * 0.13, r * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.ellipse(cx + dx * r + r * 0.04, eyeY - r * 0.05, r * 0.045, r * 0.055, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.fillStyle = "rgba(244,160,168,0.55)";
+    ctx.beginPath();
+    ctx.ellipse(cx - r * 0.48, cy + r * 0.32, r * 0.16, r * 0.09, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + r * 0.48, cy + r * 0.32, r * 0.16, r * 0.09, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#C45A66";
+    ctx.lineWidth = Math.max(2, r * 0.07);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.28, cy + r * 0.42);
+    ctx.quadraticCurveTo(cx, cy + r * 0.62, cx + r * 0.28, cy + r * 0.42);
+    ctx.stroke();
+    ctx.restore();
   }
 
-  function astronautSVG(photo, suffix, opts) {
-    const x = "ast-" + (suffix || "a");
-    const skipPhoto = opts && opts.forCanvas;
-    const { cx, cy, r } = ASTRO_VISOR;
-    const face = !skipPhoto && photo
-      ? `<image href="${photo}" x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" preserveAspectRatio="xMidYMid slice"/>`
-      : defaultFaceSvg();
-    const ink = astroStroke();
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ASTRO_VB_W} ${ASTRO_VB_H}" class="astronaut-art" width="${ASTRO_VB_W}" height="${ASTRO_VB_H}" aria-hidden="true">
-      <defs>
-        <clipPath id="visor-clip-${x}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
-        <clipPath id="helm-clip-${x}"><circle cx="${cx}" cy="${cy - 2}" r="80"/></clipPath>
-      </defs>
-      <!-- raised right arm (viewer's left): chubby line-art sausage -->
-      <line x1="116" y1="206" x2="74" y2="122" stroke="${ASTRO_INK}" stroke-width="36" stroke-linecap="round"/>
-      <line x1="116" y1="206" x2="74" y2="122" stroke="#FFFFFF" stroke-width="29" stroke-linecap="round"/>
-      <line x1="122" y1="204" x2="80" y2="124" stroke="#E8E8E8" stroke-width="9" stroke-linecap="round"/>
-      <line x1="73" y1="120" x2="85" y2="142" stroke="${ASTRO_INK}" stroke-width="24" stroke-linecap="round"/>
-      <line x1="73" y1="120" x2="85" y2="142" stroke="#F2C94C" stroke-width="16.5" stroke-linecap="round"/>
-      <!-- hanging left arm (viewer's right) -->
-      <line x1="196" y1="206" x2="216" y2="276" stroke="${ASTRO_INK}" stroke-width="34" stroke-linecap="round"/>
-      <line x1="196" y1="206" x2="216" y2="276" stroke="#FFFFFF" stroke-width="27" stroke-linecap="round"/>
-      <line x1="202" y1="210" x2="220" y2="272" stroke="#E8E8E8" stroke-width="8" stroke-linecap="round"/>
-      <rect x="202" y="222" width="24" height="20" rx="8" transform="rotate(16 214 232)" fill="#4BA3E8" stroke="${ASTRO_INK}" stroke-width="${ASTRO_SW}" stroke-linecap="round" stroke-linejoin="round"/>
-      <line x1="210" y1="254" x2="216" y2="272" stroke="${ASTRO_INK}" stroke-width="22" stroke-linecap="round"/>
-      <line x1="210" y1="254" x2="216" y2="272" stroke="#F2C94C" stroke-width="15" stroke-linecap="round"/>
-      <!-- legs -->
-      <rect x="118" y="276" width="30" height="38" rx="13" ${ink}/>
-      <rect x="156" y="276" width="30" height="38" rx="13" ${ink}/>
-      <rect x="130" y="290" width="10" height="20" rx="4" ${astroFillOnly("#E8E8E8")}/>
-      <rect x="168" y="290" width="10" height="20" rx="4" ${astroFillOnly("#E8E8E8")}/>
-      <!-- torso -->
-      <rect x="108" y="186" width="88" height="112" rx="30" ${ink}/>
-      <rect x="154" y="200" width="28" height="80" rx="14" ${astroFillOnly("#E8E8E8")}/>
-      <!-- belt -->
-      <rect x="118" y="264" width="68" height="8" rx="3" fill="#C4C4C4" stroke="${ASTRO_INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- chest control box -->
-      <rect x="128" y="206" width="48" height="30" rx="7" ${ink}/>
-      <rect x="134" y="212" width="16" height="18" rx="4" fill="#EE5A5A" stroke="${ASTRO_INK}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="154" y="212" width="15" height="8" rx="2.5" fill="#FFD84A" stroke="${ASTRO_INK}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="154" y="223" width="16" height="7" rx="2.5" fill="#7ED0F0" stroke="${ASTRO_INK}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- boots -->
-      <rect x="108" y="304" width="44" height="32" rx="13" ${ink}/>
-      <rect x="152" y="304" width="44" height="32" rx="13" ${ink}/>
-      <rect x="116" y="322" width="30" height="8" rx="3" ${astroFillOnly("#E0E0E0")}/>
-      <rect x="160" y="322" width="30" height="8" rx="3" ${astroFillOnly("#E0E0E0")}/>
-      <!-- hanging hand -->
-      <ellipse cx="218" cy="292" rx="16" ry="14" ${ink}/>
-      <ellipse cx="224" cy="294" rx="6" ry="5" ${astroFillOnly("#E8E8E8")}/>
-      <!-- helmet ear bumps -->
-      <circle cx="76" cy="118" r="17" ${ink}/>
-      <circle cx="228" cy="118" r="17" ${ink}/>
-      <circle cx="76" cy="122" r="7" ${astroFillOnly("#E8E8E8")}/>
-      <circle cx="228" cy="122" r="7" ${astroFillOnly("#E8E8E8")}/>
-      <!-- helmet -->
-      <circle cx="${cx}" cy="${cy - 2}" r="80" ${ink}/>
-      <g clip-path="url(#helm-clip-${x})">
-        <ellipse cx="${cx + 22}" cy="${cy + 28}" rx="40" ry="28" ${astroFillOnly("#E8E8E8")}/>
-      </g>
-      <!-- face opening -->
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="#F8CDB0"/>
-      <g clip-path="url(#visor-clip-${x})">${face}</g>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ASTRO_INK}" stroke-width="${ASTRO_SW}"/>
-      <!-- inner rim shade -->
-      <path d="M${cx - 40} ${cy + 38} Q${cx} ${cy + 52} ${cx + 40} ${cy + 38}" fill="none" stroke="#000" stroke-opacity=".12" stroke-width="6" stroke-linecap="round"/>
-      <!-- thumbs-up hand (raised) -->
-      <g transform="translate(68, 100) rotate(-8)">
-        <rect x="-17" y="-2" width="34" height="28" rx="12" ${ink}/>
-        <rect x="2" y="-22" width="17" height="22" rx="8.5" ${ink}/>
-        <rect x="7" y="-14" width="7" height="10" rx="3" ${astroFillOnly("#E8E8E8")}/>
-      </g>
-    </svg>`;
+  function defaultFaceDataUrl(size) {
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    drawDefaultFace(c.getContext("2d"), size, size);
+    return c.toDataURL("image/png");
   }
 
-  function mountAstronaut(el, photo, suffix) {
+  function astronautMarkup(photo) {
+    const face = photo
+      ? '<img class="astro-face" alt="" src="' + photo + '">'
+      : '<canvas class="astro-face astro-face-default" width="256" height="256"></canvas>';
+    return '<div class="astronaut-art" aria-hidden="true">' +
+      '<div class="astro-face-slot" style="' + visorSlotStyle() + '">' + face + "</div>" +
+      '<img class="astro-suit" alt="" src="' + ASTRO_SRC_WEBP + '">' +
+      '<span class="astro-glass" style="' + visorSlotStyle() + '"></span>' +
+      "</div>";
+  }
+
+  function astronautSVG(photo) {
+    return astronautMarkup(photo);
+  }
+
+  function mountAstronaut(el, photo) {
     if (!el) return;
-    el.innerHTML = astronautSVG(photo, suffix);
+    el.innerHTML = astronautMarkup(photo);
+    const suit = el.querySelector(".astro-suit");
+    if (suit) {
+      suit.addEventListener("error", function onErr() {
+        suit.removeEventListener("error", onErr);
+        suit.src = ASTRO_SRC_PNG;
+      });
+    }
+    const canv = el.querySelector(".astro-face-default");
+    if (canv) drawDefaultFace(canv.getContext("2d"), canv.width, canv.height);
+    preloadAstronautSuit().catch(() => {});
   }
 
   function updateTravelUI() {
@@ -1821,13 +1810,16 @@
   }
 
   function sealMetrics(cx, cy, r) {
-    const rx = r * 1.28, ry = r * 0.36, rot = -0.55;
+    const rx = r * SEAL_RING.rxK + r * SEAL_RING.bandK / 2;
+    const ry = r * SEAL_RING.ryK + r * SEAL_RING.bandK / 2;
+    const rot = SEAL_RING.rot;
     const cos = Math.cos(rot), sin = Math.sin(rot);
     const ex = Math.hypot(rx * cos, ry * sin);
     const ey = Math.hypot(rx * sin, ry * cos);
     const pad = r * 0.08;
-    const halfW = Math.max(r + r * 0.08, ex) + pad;
-    const halfH = Math.max(r + r * 0.08, ey) + pad;
+    const badge = r + r * 0.08;
+    const halfW = Math.max(badge, ex) + pad;
+    const halfH = Math.max(badge, ey) + pad;
     return { cx, cy, r, reach: Math.max(halfW, halfH), box: rectBox(cx - halfW, cy - halfH, halfW * 2, halfH * 2) };
   }
 
@@ -1970,26 +1962,103 @@
     const pcy = r * 0.06;
     ctx.restore();
 
-    ctx.save();
-    ctx.translate(pcx, pcy);
-    ctx.rotate(-0.55);
-    ctx.strokeStyle = "#F15B6B";
-    ctx.lineWidth = r * 0.11;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 1.28, r * 0.36, 0, Math.PI, 0, true);
-    ctx.stroke();
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = r * 0.045;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 1.28, r * 0.36, 0, Math.PI, 0, true);
-    ctx.stroke();
-    ctx.strokeStyle = "#4AD4F0";
-    ctx.lineWidth = r * 0.055;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 1.16, r * 0.3, 0, Math.PI, 0, true);
-    ctx.stroke();
-    ctx.restore();
+
+    function strokeRingHalf(fromA, toA) {
+      const rx = r * SEAL_RING.rxK;
+      const ry = r * SEAL_RING.ryK;
+      ctx.save();
+      ctx.translate(pcx, pcy);
+      ctx.rotate(SEAL_RING.rot);
+      ctx.lineCap = "butt";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#D4A017";
+      ctx.lineWidth = r * SEAL_RING.bandK;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, fromA, toA, false);
+      ctx.stroke();
+      ctx.strokeStyle = "#FFF8E0";
+      ctx.lineWidth = r * (SEAL_RING.bandK - 0.08);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, fromA, toA, false);
+      ctx.stroke();
+      ctx.strokeStyle = "#4AD4F0";
+      ctx.lineWidth = Math.max(2, r * 0.035);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, fromA, toA, false);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawTextOnRing(label) {
+      const rx = r * SEAL_RING.rxK;
+      const ry = r * SEAL_RING.ryK;
+      const chars = Array.from(label);
+      const a0 = Math.PI - 0.16, a1 = 0.16;
+      const steps = 240;
+      const samples = [];
+      let total = 0;
+      let prev = { x: rx * Math.cos(a0), y: ry * Math.sin(a0) };
+      samples.push({ a: a0, s: 0 });
+      for (let i = 1; i <= steps; i++) {
+        const a = a0 + (a1 - a0) * (i / steps);
+        const p = { x: rx * Math.cos(a), y: ry * Math.sin(a) };
+        total += Math.hypot(p.x - prev.x, p.y - prev.y);
+        samples.push({ a, s: total });
+        prev = p;
+      }
+      const fontPx = Math.max(16, Math.round(r * 0.34));
+      ctx.font = "700 " + fontPx + 'px "Jua", "Gothic A1", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const pad = Math.max(2, fontPx * 0.06);
+      const widths = chars.map((ch) => ctx.measureText(ch).width + pad);
+      const textLen = widths.reduce((a, b) => a + b, 0);
+      const usable = total * 0.92;
+      const scale = textLen > usable ? usable / textLen : 1;
+      let pos = (total - textLen * scale) / 2;
+      function angleAt(s) {
+        let lo = 0, hi = samples.length - 1;
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1;
+          if (samples[mid].s < s) lo = mid + 1;
+          else hi = mid;
+        }
+        const b = samples[Math.max(1, lo)];
+        const a = samples[b === samples[0] ? 0 : lo - 1];
+        const t = (s - a.s) / Math.max(1e-6, b.s - a.s);
+        return a.a + (b.a - a.a) * t;
+      }
+      ctx.save();
+      ctx.translate(pcx, pcy);
+      ctx.rotate(SEAL_RING.rot);
+      chars.forEach((ch, i) => {
+        const wch = widths[i] * scale;
+        const mid = pos + wch / 2;
+        const a = angleAt(mid);
+        const x = rx * Math.cos(a);
+        const y = ry * Math.sin(a);
+        const tang = Math.atan2(-ry * Math.cos(a), rx * Math.sin(a));
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(tang);
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#FFFDF4";
+        ctx.lineWidth = Math.max(4, fontPx * 0.18);
+        ctx.strokeText(ch, 0, 0);
+        ctx.strokeStyle = "#0E1A3A";
+        ctx.lineWidth = Math.max(3, fontPx * 0.12);
+        ctx.strokeText(ch, 0, 0);
+        ctx.fillStyle = "#0E1A3A";
+        ctx.fillText(ch, 0, 0);
+        ctx.restore();
+        pos += wch;
+      });
+      ctx.restore();
+    }
+
+    // Back half of the widened ring (behind the planet)
+    strokeRingHalf(Math.PI, Math.PI * 2);
 
     ctx.save();
     ctx.beginPath();
@@ -2024,26 +2093,10 @@
     ctx.restore();
     ctx.restore();
 
-    ctx.save();
-    ctx.translate(pcx, pcy);
-    ctx.rotate(-0.55);
-    ctx.strokeStyle = "#F15B6B";
-    ctx.lineWidth = r * 0.11;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 1.28, r * 0.36, 0, 0, Math.PI, false);
-    ctx.stroke();
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = r * 0.045;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 1.28, r * 0.36, 0, 0, Math.PI, false);
-    ctx.stroke();
-    ctx.strokeStyle = "#4AD4F0";
-    ctx.lineWidth = r * 0.055;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, r * 1.16, r * 0.3, 0, 0, Math.PI, false);
-    ctx.stroke();
-    ctx.restore();
+
+    // Front half of the widened ring (in front of the planet) + lettering
+    strokeRingHalf(0, Math.PI);
+    drawTextOnRing("우주 탐험대");
 
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
@@ -2056,53 +2109,91 @@
     ctx.lineWidth = r * 0.035;
     ctx.stroke();
 
-    ctx.fillStyle = "#12315A";
-    ctx.strokeStyle = "rgba(255,255,255,0.65)";
-    ctx.lineWidth = 3;
-    ctx.font = "700 " + Math.max(14, Math.round(r * 0.135)) + 'px "Jua", "Gothic A1", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#12315A";
-    drawCurvedText(ctx, "우주 탐험대", 0, 0, r, -Math.PI / 2);
-
     ctx.restore();
     return metrics;
   }
 
+  function drawImageCover(ctx, img, x, y, w, h) {
+    const ir = img.width / img.height;
+    const tr = w / h;
+    let sx, sy, sw, sh;
+    if (ir > tr) {
+      sh = img.height;
+      sw = sh * tr;
+      sx = (img.width - sw) / 2;
+      sy = Math.max(0, (img.height - sh) * 0.22);
+    } else {
+      sw = img.width;
+      sh = sw / tr;
+      sx = 0;
+      sy = Math.max(0, (img.height - sh) * 0.22);
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  }
+
+  function drawVisorGlass(ctx, cx, cy, rx, ry) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.clip();
+    const gold = ctx.createRadialGradient(cx, cy, rx * 0.15, cx, cy, rx);
+    gold.addColorStop(0, "rgba(255, 220, 140, 0)");
+    gold.addColorStop(0.65, "rgba(212, 170, 60, 0.05)");
+    gold.addColorStop(1, "rgba(160, 110, 30, 0.18)");
+    ctx.fillStyle = gold;
+    ctx.fillRect(cx - rx, cy - ry, rx * 2, ry * 2);
+    const gloss = ctx.createRadialGradient(cx - rx * 0.28, cy - ry * 0.38, 0, cx - rx * 0.1, cy - ry * 0.15, rx * 0.7);
+    gloss.addColorStop(0, "rgba(255,255,255,0.42)");
+    gloss.addColorStop(0.35, "rgba(255,255,255,0.12)");
+    gloss.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = gloss;
+    ctx.beginPath();
+    ctx.ellipse(cx - rx * 0.22, cy - ry * 0.32, rx * 0.55, ry * 0.38, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   async function drawAstronautOnCanvas(ctx, x, y, height, photo) {
     const width = height * (ASTRO_VB_W / ASTRO_VB_H);
-    const svg = astronautSVG(null, "cert-draw-" + Math.floor(Math.random() * 1e6), { forCanvas: true });
-    const img = await svgMarkupToImage(svg, ASTRO_VB_W * 4, ASTRO_VB_H * 4);
-    ctx.drawImage(img, x, y, width, height);
     const sx = width / ASTRO_VB_W;
     const sy = height / ASTRO_VB_H;
     const cx = x + ASTRO_VISOR.cx * sx;
     const cy = y + ASTRO_VISOR.cy * sy;
-    const r = ASTRO_VISOR.r * Math.min(sx, sy);
+    const rx = ASTRO_VISOR.rx * sx;
+    const ry = ASTRO_VISOR.ry * sy;
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#0A1220";
+    ctx.fill();
     if (photo) {
       try {
         const face = await loadImage(photo);
         ctx.save();
         ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(face, cx - r, cy - r, r * 2, r * 2);
+        drawImageCover(ctx, face, cx - rx, cy - ry, rx * 2, ry * 2);
         ctx.restore();
-      } catch (e) { /* keep default face */ }
+      } catch (e) {
+        photo = null;
+      }
     }
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = ASTRO_INK;
-    ctx.lineWidth = Math.max(2, r * 0.06);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(cx, cy + r * 0.62, r * 0.72, r * 0.18, 0, Math.PI, 0, true);
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = Math.max(3, r * 0.1);
-    ctx.lineCap = "round";
-    ctx.stroke();
+    if (!photo) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.translate(cx - rx, cy - ry);
+      drawDefaultFace(ctx, rx * 2, ry * 2);
+      ctx.restore();
+    }
     ctx.restore();
+    try {
+      const suit = await preloadAstronautSuit();
+      ctx.drawImage(suit, x, y, width, height);
+    } catch (e) { /* suit missing */ }
+    drawVisorGlass(ctx, cx, cy, rx, ry);
     return { width, height };
   }
 
@@ -2122,6 +2213,211 @@
     ctx.stroke();
     drawStarSpark(ctx, 18, 18, 5, "#E8C25A");
     ctx.restore();
+  }
+
+  function drawMiniPlanet(ctx, x, y, pr, color, ring) {
+    ctx.save();
+    ctx.translate(x, y);
+    const g = ctx.createRadialGradient(-pr * 0.3, -pr * 0.3, 0, 0, 0, pr);
+    g.addColorStop(0, color);
+    g.addColorStop(1, "rgba(10,10,30,0.35)");
+    ctx.beginPath();
+    ctx.arc(0, 0, pr, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(-pr * 0.28, -pr * 0.28, pr * 0.35, pr * 0.22, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+    if (ring) {
+      ctx.strokeStyle = ring;
+      ctx.lineWidth = Math.max(1.6, pr * 0.28);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, pr * 1.7, pr * 0.42, -0.45, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawMiniMoon(ctx, x, y, pr) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = "#E8E0C8";
+    ctx.beginPath();
+    ctx.arc(0, 0, pr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(160,150,130,0.45)";
+    [[-0.25, -0.15, 0.22], [0.3, 0.15, 0.18], [0.05, 0.35, 0.14], [-0.1, 0.2, 0.12]].forEach((c) => {
+      ctx.beginPath();
+      ctx.arc(c[0] * pr, c[1] * pr, pr * c[2], 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawMiniRocket(ctx, x, y, rot, sc) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.scale(sc, sc);
+    ctx.fillStyle = "#F4F0E8";
+    ctx.beginPath();
+    ctx.moveTo(0, -16);
+    ctx.quadraticCurveTo(7, -2, 6, 8);
+    ctx.lineTo(-6, 8);
+    ctx.quadraticCurveTo(-7, -2, 0, -16);
+    ctx.fill();
+    ctx.fillStyle = "#4AD4F0";
+    ctx.beginPath();
+    ctx.arc(0, -2, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#E24B5A";
+    ctx.beginPath();
+    ctx.moveTo(-6, 6);
+    ctx.lineTo(-11, 12);
+    ctx.lineTo(-3, 8);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(6, 6);
+    ctx.lineTo(11, 12);
+    ctx.lineTo(3, 8);
+    ctx.fill();
+    ctx.fillStyle = "#FFB347";
+    ctx.beginPath();
+    ctx.moveTo(-3, 8);
+    ctx.quadraticCurveTo(0, 18, 3, 8);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMiniComet(ctx, x, y, ang, sc) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang);
+    ctx.scale(sc, sc);
+    const tail = ctx.createLinearGradient(-22, 0, 6, 0);
+    tail.addColorStop(0, "rgba(170,220,255,0)");
+    tail.addColorStop(0.6, "rgba(180,230,255,0.35)");
+    tail.addColorStop(1, "rgba(255,255,255,0.85)");
+    ctx.fillStyle = tail;
+    ctx.beginPath();
+    ctx.moveTo(-24, 0);
+    ctx.quadraticCurveTo(-8, -5, 6, -2.5);
+    ctx.lineTo(6, 2.5);
+    ctx.quadraticCurveTo(-8, 5, -24, 0);
+    ctx.fill();
+    ctx.fillStyle = "#FFF6D0";
+    ctx.beginPath();
+    ctx.arc(6, 0, 3.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSpaceCertBorder(ctx, W, H, rnd) {
+    const outer = 14;
+    const band = 58;
+    const radO = 30;
+    const radI = 18;
+    const ox = outer, oy = outer, ow = W - outer * 2, oh = H - outer * 2;
+    const ix = outer + band, iy = outer + band, iw = W - (outer + band) * 2, ih = H - (outer + band) * 2;
+
+    const nebula = ctx.createLinearGradient(0, 0, W, H);
+    nebula.addColorStop(0, "#0B1438");
+    nebula.addColorStop(0.22, "#2A1570");
+    nebula.addColorStop(0.48, "#16145A");
+    nebula.addColorStop(0.72, "#0C4A5C");
+    nebula.addColorStop(1, "#123A6A");
+    ctx.fillStyle = nebula;
+    ctx.fillRect(0, 0, W, H);
+
+    const blobs = [
+      [80, 70, 260, "rgba(130, 40, 190, 0.42)"],
+      [W - 70, 80, 240, "rgba(20, 170, 180, 0.38)"],
+      [90, H - 70, 260, "rgba(20, 140, 170, 0.38)"],
+      [W - 80, H - 80, 250, "rgba(110, 40, 180, 0.4)"],
+      [W / 2, 40, 200, "rgba(60, 80, 210, 0.26)"],
+      [W / 2, H - 40, 200, "rgba(90, 40, 170, 0.26)"],
+      [50, H / 2, 180, "rgba(30, 180, 170, 0.28)"],
+      [W - 50, H / 2, 180, "rgba(150, 50, 190, 0.28)"]
+    ];
+    blobs.forEach((b) => {
+      const g = ctx.createRadialGradient(b[0], b[1], 0, b[0], b[1], b[2]);
+      g.addColorStop(0, b[3]);
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(b[0], b[1], b[2], 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.save();
+    ctx.translate(W / 2, H / 2);
+    ctx.rotate(-0.52);
+    ctx.globalAlpha = 0.3;
+    const mw = ctx.createLinearGradient(0, -46, 0, 46);
+    mw.addColorStop(0, "rgba(255,255,255,0)");
+    mw.addColorStop(0.35, "rgba(190, 210, 255, 0.18)");
+    mw.addColorStop(0.5, "rgba(255,255,255,0.75)");
+    mw.addColorStop(0.65, "rgba(170, 200, 255, 0.22)");
+    mw.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = mw;
+    ctx.fillRect(-W, -40, W * 2, 80);
+    ctx.rotate(0.16);
+    ctx.globalAlpha = 0.14;
+    ctx.fillRect(-W, -16, W * 2, 32);
+    ctx.restore();
+
+    for (let i = 0; i < 260; i++) {
+      const x = rnd() * W;
+      const y = rnd() * H;
+      const rad = rnd() * 1.6 + 0.3;
+      ctx.fillStyle = "rgba(255,255,255," + (0.35 + rnd() * 0.65) + ")";
+      ctx.beginPath();
+      ctx.arc(x, y, rad, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    for (let i = 0; i < 26; i++) {
+      const along = rnd();
+      const side = Math.floor(rnd() * 4);
+      let x, y;
+      if (side === 0) { x = outer + along * (W - outer * 2); y = outer + 10 + rnd() * (band - 20); }
+      else if (side === 1) { x = outer + along * (W - outer * 2); y = H - outer - 10 - rnd() * (band - 20); }
+      else if (side === 2) { x = outer + 10 + rnd() * (band - 20); y = outer + along * (H - outer * 2); }
+      else { x = W - outer - 10 - rnd() * (band - 20); y = outer + along * (H - outer * 2); }
+      drawStarSpark(ctx, x, y, 3.5 + rnd() * 5, rnd() > 0.45 ? "#FFFDF4" : "#FFE56A");
+    }
+
+    const mid = outer + band / 2;
+    drawMiniPlanet(ctx, mid + 8, mid + 6, 13, "#FF9F43", "#F4D2A0");
+    drawMiniMoon(ctx, W - mid - 6, mid + 4, 11);
+    drawMiniRocket(ctx, W - mid - 4, H - mid - 2, -0.6, 1.05);
+    drawMiniComet(ctx, mid + 10, H - mid - 4, -0.7, 1.1);
+    drawMiniPlanet(ctx, W / 2, mid - 2, 9, "#8B6AD4", null);
+    drawMiniPlanet(ctx, W / 2 + 70, H - mid + 1, 8, "#4ECDC4", "#C8F4F0");
+    drawMiniPlanet(ctx, mid - 2, H / 2, 8, "#A33A58", null);
+    drawMiniMoon(ctx, W - mid + 1, H / 2 + 36, 7);
+    drawMiniComet(ctx, W / 2 - 90, mid + 2, 2.5, 0.85);
+    drawMiniRocket(ctx, mid + 2, H / 2 + 80, 0.4, 0.8);
+    drawMiniPlanet(ctx, W - mid, H / 2 - 70, 7, "#FFB347", "#FFE6B0");
+
+    ctx.strokeStyle = "#E8C25A";
+    ctx.lineWidth = 2.6;
+    roundRectPath(ctx, ox + 2, oy + 2, ow - 4, oh - 4, radO - 2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 236, 170, 0.7)";
+    ctx.lineWidth = 1.1;
+    roundRectPath(ctx, ox + 6, oy + 6, ow - 12, oh - 12, radO - 4);
+    ctx.stroke();
+    ctx.strokeStyle = "#7EE8FF";
+    ctx.lineWidth = 2.1;
+    roundRectPath(ctx, ix - 2, iy - 2, iw + 4, ih + 4, radI);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(232, 194, 90, 0.85)";
+    ctx.lineWidth = 1.2;
+    roundRectPath(ctx, ix + 2, iy + 2, iw - 4, ih - 4, radI - 2);
+    ctx.stroke();
+
+    return { ix, iy, iw, ih, band, outer };
   }
 
   async function renderCertificate(planet) {
@@ -2156,36 +2452,15 @@
       ctx.fill();
     }
 
-    const m = 42;
-    ctx.lineWidth = 16;
-    ctx.strokeStyle = "#E8B423";
-    ctx.strokeRect(m, m, W - m * 2, H - m * 2);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#FFF3C4";
-    ctx.strokeRect(m + 16, m + 16, W - (m + 16) * 2, H - (m + 16) * 2);
-
-    const ix = m + 26;
-    const iy = m + 26;
-    const iw = W - (m + 26) * 2;
-    const ih = H - (m + 26) * 2;
+    const frame = drawSpaceCertBorder(ctx, W, H, rnd);
+    const ix = frame.ix, iy = frame.iy, iw = frame.iw, ih = frame.ih;
     const paper = ctx.createLinearGradient(ix, iy, ix, iy + ih);
     paper.addColorStop(0, "#FFF8E8");
     paper.addColorStop(0.5, "#F7F0DC");
     paper.addColorStop(1, "#F3E6C4");
     ctx.fillStyle = paper;
     ctx.fillRect(ix, iy, iw, ih);
-
-    ctx.strokeStyle = "#D4A017";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(ix + 14, iy + 14, iw - 28, ih - 28);
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = "#E8C96A";
-    ctx.strokeRect(ix + 22, iy + 22, iw - 44, ih - 44);
-
-    drawCornerFlourish(ctx, ix + 36, iy + 36, 0);
-    drawCornerFlourish(ctx, ix + iw - 36, iy + 36, Math.PI / 2);
-    drawCornerFlourish(ctx, ix + iw - 36, iy + ih - 36, Math.PI);
-    drawCornerFlourish(ctx, ix + 36, iy + ih - 36, -Math.PI / 2);
+    // thin inner gold pinstripe already sits on the band; keep parchment clean
 
     ctx.fillStyle = "#2C4C9A";
     ctx.font = "68px Jua, sans-serif";
@@ -2572,6 +2847,7 @@
   }
 
   function init() {
+    preloadAstronautSuit().catch(() => {});
     buildStars();
     buildSystem();
     persistGeneratedCustomFields();
@@ -2589,12 +2865,18 @@
       renderCertificate,
       persistGeneratedCustomFields,
       astronautSVG,
+      drawAstronautOnCanvas,
+      preloadAstronautSuit,
       drawSpaceSeal,
       sealMetrics,
       planetTightBox,
       astroDestBox,
       boxesGap,
-      CERT_GAP
+      CERT_GAP,
+      ASTRO_VISOR,
+      ASTRO_VB_W,
+      ASTRO_VB_H,
+      ASTRO_TIGHT
     };
   }
 

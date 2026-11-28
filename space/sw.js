@@ -1,4 +1,4 @@
-const CACHE = "space-explore-v6";
+const CACHE = "space-explore-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -11,7 +11,9 @@ const ASSETS = [
   "./icons/apple-touch-icon.png",
   "./fonts/Jua.woff",
   "./fonts/GothicA1-Regular.woff",
-  "./fonts/GothicA1-Bold.woff"
+  "./fonts/GothicA1-Bold.woff",
+  "./assets/astronaut.webp",
+  "./assets/astronaut.png"
 ];
 
 self.addEventListener("install", (event) => {

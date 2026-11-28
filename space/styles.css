@@ -1097,13 +1097,49 @@ body.paused .c-moon-orbit {
   margin: 0 auto 4px;
 }
 .astronaut-art {
+  position: relative;
   display: block;
-  width: 112px;
-  height: auto;
+  width: auto;
+  height: 200px;
+  aspect-ratio: 533 / 1084;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.22));
 }
-.builder .astronaut-art { width: 118px; }
-.card .astronaut-art { width: 136px; }
+.builder .astronaut-art { height: 210px; width: auto; }
+.card .astronaut-art { height: 230px; width: auto; }
+.astro-face-slot {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 0;
+  background: #0A1220;
+}
+.astro-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+}
+.astro-suit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.astro-glass {
+  position: absolute;
+  border-radius: 50%;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 28% 24%, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.10) 28%, rgba(255,255,255,0) 55%),
+    radial-gradient(80% 80% at 50% 60%, rgba(212,170,60,0) 45%, rgba(160,110,30,0.16) 100%);
+  box-shadow: inset 0 0 8px rgba(255, 220, 140, 0.2);
+}
 .explorer-input { max-width: 240px; font-size: 18px; min-height: 44px; }
 .travel-block { width: 100%; text-align: center; margin-top: 6px; }
 .travel-row {
@@ -1181,8 +1217,8 @@ body.paused .c-moon-orbit {
 .cert-hint[hidden] { display: none !important; }
 
 @media (orientation: landscape) {
-  .card .astronaut-art { width: 114px; }
-  .builder .astronaut-art { width: 100px; }
+  .card .astronaut-art { height: 186px; width: auto; }
+  .builder .astronaut-art { height: 172px; width: auto; }
   .cert-preview-wrap img { max-height: min(58vh, 560px); }
   .builder .card-actions .btn-cert { flex: 1 1 100%; }
   .btn { font-size: 20px; }
