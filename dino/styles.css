@@ -41,7 +41,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .chip.gold:active { transform: translateY(3px); box-shadow: 0 1px 0 #c47f0a; }
 
 #globe { position: absolute; overflow: visible; z-index: 1; }
-#globe .band { fill: transparent; cursor: pointer; }
+#globe .band { fill: #fff; fill-opacity: 0; cursor: pointer; pointer-events: all; }
 #globe .band.press { fill: rgba(255,255,255,.28); }
 #globe .seams line { stroke: #ffffff; stroke-width: 2.8; stroke-linecap: round; opacity: .95; }
 #globe .seams { filter: drop-shadow(0 0 1.2px #1a4a86); }
@@ -116,6 +116,14 @@ body.pausedAnim #home .dino-svg *, body.pausedAnim #scene .dino-svg *, body.paus
 /* ---------- 시대 화면 ---------- */
 #sceneBg, #sceneFg, #creatures { position: absolute; inset: 0; }
 #sceneBg svg, #sceneFg svg { display: block; position: absolute; left: 0; top: 0; }
+#sceneBg .era-photo {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 38%; pointer-events: none; display: block;
+}
+#sceneFg .era-veil {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 45%, rgba(20,16,8,.16) 100%);
+}
 #sceneFg { pointer-events: none; z-index: 4; }
 #creatures { z-index: 2; }
 .cloud { animation: cloud linear infinite alternate; }

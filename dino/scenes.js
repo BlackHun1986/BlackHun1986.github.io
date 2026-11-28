@@ -121,69 +121,11 @@
   function build(eraId, W, H) {
     const portrait = H > W;
     const hz = H * (portrait ? 0.3 : 0.37);
-    const seed = { triassic: 11, jurassic: 23, cretaceous: 37 }[eraId];
-    const R = rng(seed);
-    const gh = H - hz;
-    let defs = '', sky = '', far = '', gnd = '', back = '', fg = '';
-    const U = Math.min(W, H * 1.4); // 그림 크기 기준
-    if (eraId === 'triassic') {
-      defs = `<linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc98f"/><stop offset=".6" stop-color="#ffe4bd"/><stop offset="1" stop-color="#fff2d9"/></linearGradient>
-        <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecc07c"/><stop offset="1" stop-color="#d89c5a"/></linearGradient>
-        <radialGradient id="sun"><stop offset="0" stop-color="#fffbe0"/><stop offset=".5" stop-color="#ffe9a8" stop-opacity=".9"/><stop offset="1" stop-color="#ffd88a" stop-opacity="0"/></radialGradient>`;
-      sky = `<rect width="${W}" height="${hz + 4}" fill="url(#sk)"/><circle cx="${W * .78}" cy="${hz * .5}" r="${hz * .55}" fill="url(#sun)"/><circle cx="${W * .78}" cy="${hz * .5}" r="${hz * .17}" fill="#fff6c8"/>` +
-        cloud(W * .2, hz * .3, U * .06, 70, -10, .8) + cloud(W * .5, hz * .22, U * .045, 90, -40, .7);
-      far = mesa(W * .04, hz + 4, W * .16, hz * .62, '#d8825c') + mesa(W * .16, hz + 4, W * .1, hz * .4, '#c9704f') + mesa(W * .58, hz + 4, W * .2, hz * .5, '#d8825c') + mesa(W * .78, hz + 4, W * .12, hz * .72, '#c9704f') +
-        hills(W, hz + 6, hz * .12, '#e3a56c', R, 180);
-      gnd = `<rect y="${hz}" width="${W}" height="${gh + 2}" fill="url(#gd)"/>` + hills(W, hz + gh * .05, gh * .05, '#e9b476', rng(5), 220);
-      // 갈라진 땅
-      for (let i = 0; i < 22; i++) {
-        const x = R() * W, y = hz + gh * (.15 + R() * .85), l = U * (.03 + R() * .04);
-        gnd += `<path d="M${r1(x)},${r1(y)} l${r1(l)},${r1(l * .2)} l${r1(l * .5)},${r1(-l * .15)} M${r1(x + l)},${r1(y + l * .2)} l${r1(l * .2)},${r1(l * .4)}" stroke="#b9803f" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".5"/>`;
-      }
-      for (let i = 0; i < 16; i++) gnd += `<ellipse cx="${r1(R() * W)}" cy="${r1(hz + gh * (.2 + R() * .8))}" rx="${r1(3 + R() * 4)}" ry="${r1(2 + R() * 2)}" fill="#c78d4c" opacity=".55"/>`;
-      // 식물: 양치식물, 속새, 소철 (건조한 곳 – 드문드문)
-      const spots = [[.06, .12], [.2, .08], [.36, .1], [.52, .07], [.68, .12], [.84, .08], [.95, .14]];
-      spots.forEach((p, i) => {
-        const x = W * p[0], y = hz + gh * p[1] + 8, s = U * .09;
-        back += i % 3 === 0 ? cycad(x, y, s * 1.5, '#7ba047') : i % 3 === 1 ? horsetail(x, y, s * 1.3, '#8fae55') : fern(x, y, s * 1.2, '#7da24a');
-      });
-      back += rock(W * .12, hz + gh * .2, U * .035, '#cf9a62') + rock(W * .62, hz + gh * .26, U * .028, '#cf9a62');
-      fg = fern(W * .0, H + 14, U * .15, '#7ba047', 8) + cycad(W * 1.0, H + 30, U * .2, '#7ba047');
-    } else if (eraId === 'jurassic') {
-      defs = `<linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6cc2f2"/><stop offset="1" stop-color="#d4f1ff"/></linearGradient>
-        <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fc65e"/><stop offset="1" stop-color="#3f9a44"/></linearGradient>`;
-      sky = `<rect width="${W}" height="${hz + 4}" fill="url(#sk)"/><circle cx="${W * .16}" cy="${hz * .42}" r="${hz * .13}" fill="#fff6c0"/>` +
-        cloud(W * .35, hz * .3, U * .06, 80, -20) + cloud(W * .65, hz * .18, U * .05, 100, -60) + cloud(W * .9, hz * .38, U * .04, 70, -5, .85);
-      far = hills(W, hz + 8, hz * .25, '#7fbf9a', rng(3), 200) + volcano(W * .74, hz + 10, U * .3, hz * .85) + hills(W, hz + 10, hz * .12, '#4f9a62', rng(8), 170);
-      gnd = `<rect y="${hz}" width="${W}" height="${gh + 2}" fill="url(#gd)"/>`;
-      for (let i = 0; i < 40; i++) { const x = R() * W, y = hz + gh * (.08 + R() * .92), s = U * (.012 + R() * .012); gnd += `<path d="M${r1(x)},${r1(y)} q${r1(-s * .3)},${r1(-s)} ${r1(-s * .6)},${r1(-s * 1.2)} M${r1(x)},${r1(y)} q${r1(s * .1)},${r1(-s * 1.2)} ${r1(s * .2)},${r1(-s * 1.4)} M${r1(x)},${r1(y)} q${r1(s * .5)},${r1(-s)} ${r1(s * .9)},${r1(-s)}" stroke="#2f7d36" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".7"/>`; }
-      const trees = [[.05, 1], [.15, .8], [.3, 1.1], [.45, .75], [.58, .95], [.7, .7], [.86, 1.05], [.96, .8]];
-      trees.forEach((p, i) => {
-        const x = W * p[0], y = hz + gh * (.08 + (i % 3) * .035) + 6, h = hz * .85 * p[1];
-        back += i % 2 ? araucaria(x, y, h, '#3f8f4b') : conifer(x, y, h * .85, '#3f9456');
-      });
-      [[.1, .13], [.4, .16], [.62, .14], [.92, .15]].forEach((p, i) => { back += (i % 2 ? cycad(W * p[0], hz + gh * p[1] + 6, U * .13, '#46a050') : fern(W * p[0], hz + gh * p[1] + 6, U * .12, '#4aa456')); });
-      back += horsetail(W * .26, hz + gh * .16, U * .1, '#6dbb58') + horsetail(W * .78, hz + gh * .17, U * .1, '#6dbb58');
-      fg = cycad(W * .0, H + 30, U * .2, '#3f9a4a') + fern(W * 1.0, H + 14, U * .16, '#3f9a4a', 8);
-    } else {
-      defs = `<linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fcbf7"/><stop offset=".7" stop-color="#d7f0ff"/><stop offset="1" stop-color="#ffe8f0"/></linearGradient>
-        <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#82d066"/><stop offset="1" stop-color="#4fae4f"/></linearGradient>`;
-      sky = `<rect width="${W}" height="${hz + 4}" fill="url(#sk)"/><circle cx="${W * .82}" cy="${hz * .4}" r="${hz * .13}" fill="#fff6c0"/>` +
-        cloud(W * .22, hz * .32, U * .06, 85, -15) + cloud(W * .55, hz * .2, U * .05, 110, -50) + cloud(W * .8, hz * .55, U * .035, 75, -30, .8);
-      far = hills(W, hz + 8, hz * .22, '#8fcf9f', rng(4), 190) + hills(W, hz + 10, hz * .12, '#58ad6a', rng(9), 150);
-      gnd = `<rect y="${hz}" width="${W}" height="${gh + 2}" fill="url(#gd)"/>` + river(W, hz + gh * .075, gh * .07, '#6cc4f0');
-      for (let i = 0; i < 60; i++) {
-        const x = R() * W, y = hz + gh * (.2 + R() * .8), c = ['#ffd54a', '#ff8fb3', '#ffffff', '#c59bff'][i % 4];
-        gnd += flower(x, y, U * (.006 + R() * .004), c);
-      }
-      const trees = [[.05, 1.0], [.17, .8], [.33, 1.05], [.47, .75], [.6, .95], [.72, .78], [.86, 1.05], [.96, .85]];
-      trees.forEach((p, i) => { back += broadleaf(W * p[0], hz + gh * (.05 + (i % 3) * .03) + 4, hz * .82 * p[1], i % 2 ? '#4fa860' : '#5bb86a', i % 3 === 0 ? '#ff8fb3' : '#ffc1d6'); });
-      back += fern(W * .26, hz + gh * .2, U * .1, '#4aa456') + fern(W * .75, hz + gh * .21, U * .1, '#4aa456') + rock(W * .1, hz + gh * .3, U * .03, '#b6bdc2');
-      fg = broadleaf(W * -.01, H + 40, U * .26, '#4fa860', '#ff8fb3') + fern(W * 1.0, H + 14, U * .16, '#44a055', 8) + flower(W * .95, H - 14, U * .012, '#ff8fb3') + flower(W * .06, H - 12, U * .011, '#ffd54a');
-    }
-    const bgsvg = `<svg viewBox="0 0 ${r1(W)} ${r1(H)}" width="${r1(W)}" height="${r1(H)}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${defs}</defs>${sky}${far}${gnd}${back}</svg>`;
-    const fgsvg = `<svg viewBox="0 0 ${r1(W)} ${r1(H)}" width="${r1(W)}" height="${r1(H)}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${fg}</svg>`;
-    return { bg: bgsvg, fg: fgsvg, hz };
+    const pos = portrait ? 'center 30%' : 'center 38%';
+    const bg = `<img class="era-photo" src="assets/bg/${eraId}.webp" alt="" aria-hidden="true" style="object-position:${pos}">`;
+    const fg = `<div class="era-veil" aria-hidden="true"></div>`;
+    return { bg, fg, hz };
   }
+
   window.DinoScenes = { build };
 })();

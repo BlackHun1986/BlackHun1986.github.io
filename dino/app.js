@@ -419,11 +419,43 @@
   function bind() {
     $('creatures').addEventListener('click', e => activate(e.target.closest('.cr')));
     $('creatures').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(e.target.closest('.cr')); } });
-    $('homeDinos').addEventListener('click', e => { const d = e.target.closest('.hd'); if (d) renderScene(d.dataset.era); });
-    $('homeDinos').addEventListener('keydown', e => { const d = e.target.closest('.hd'); if (d && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); renderScene(d.dataset.era); } });
-    $('homePills').addEventListener('click', e => { const p = e.target.closest('.pill'); if (p) renderScene(p.dataset.era); });
-    $('globe').addEventListener('click', e => { const b = e.target.closest('.band'); if (b) renderScene(b.dataset.era); });
-    $('globe').addEventListener('pointerdown', e => { const b = e.target.closest('.band'); if (b) { b.classList.add('press'); setTimeout(() => b.classList.remove('press'), 300); } });
+    function eraFromPoint(clientX, clientY) {
+      const g = $('globe'); if (!g) return null;
+      const r = g.getBoundingClientRect();
+      const x = (clientX - r.left) / r.width * 228 - 14;
+      const y = (clientY - r.top) / r.height * 228 - 14;
+      const dx = x - 100, dy = y - 100;
+      if (Math.hypot(dx, dy) > 108) return null;
+      let deg = Math.atan2(dx, -dy) * 180 / Math.PI;
+      if (deg < 0) deg += 360;
+      if (deg >= 240) return 'triassic';
+      if (deg >= 120) return 'jurassic';
+      return 'cretaceous';
+    }
+    let lastEnter = 0;
+    function enterEra(era) {
+      if (!era || state.era) return;
+      const now = Date.now();
+      if (now - lastEnter < 400) return;
+      lastEnter = now;
+      renderScene(era);
+    }
+    function homeTargetEra(e) {
+      if (e.target.closest && e.target.closest('.topbar, .chip, #btnQuiz')) return null;
+      const t = e.target.closest && e.target.closest('.pill, .hd, .band');
+      return (t && t.dataset.era) || eraFromPoint(e.clientX, e.clientY);
+    }
+    $('home').addEventListener('pointerdown', e => {
+      const era = homeTargetEra(e);
+      if (!era) return;
+      const band = document.querySelector('#globe .band[data-era="' + era + '"]');
+      if (band) { band.classList.add('press'); setTimeout(() => band.classList.remove('press'), 300); }
+    });
+    $('home').addEventListener('pointerup', e => { if (e.button) return; const era = homeTargetEra(e); if (era) enterEra(era); });
+    $('homeDinos').addEventListener('click', e => { const d = e.target.closest('.hd'); if (d) enterEra(d.dataset.era); });
+    $('homeDinos').addEventListener('keydown', e => { const d = e.target.closest('.hd'); if (d && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); enterEra(d.dataset.era); } });
+    $('homePills').addEventListener('click', e => { const p = e.target.closest('.pill'); if (p) enterEra(p.dataset.era); });
+    $('globe').addEventListener('click', e => { enterEra((e.target.closest && e.target.closest('.band') && e.target.closest('.band').dataset.era) || eraFromPoint(e.clientX, e.clientY)); });
     $('btnBack').addEventListener('click', goHome);
     $('cardClose').addEventListener('click', closeCard);
     $('card').addEventListener('click', e => { if (e.target === $('card')) closeCard(); });
@@ -447,6 +479,17 @@
   fit(); makeStars(); bind(); layoutHome();
   window.__dino = { stripForSpeech, cardSpeech, openCard, renderScene, goHome, state };
   if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => { }));
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
+        .then(reg => { try { reg.update(); } catch (e) { } })
+        .catch(() => { });
+    });
   }
 })();
