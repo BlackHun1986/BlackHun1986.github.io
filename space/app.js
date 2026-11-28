@@ -204,30 +204,30 @@
   };
 
   const PLACED = [
-    { id: "mercury", size: "clamp(52px, 7.2vmin, 68px)", glow: "rgba(200,180,160,0.45)" },
-    { id: "venus", size: "clamp(58px, 8vmin, 76px)", glow: "rgba(230,190,90,0.45)" },
-    { id: "earth", size: "clamp(60px, 8.4vmin, 80px)", glow: "rgba(80,150,255,0.5)", hasMoon: true },
-    { id: "mars", size: "clamp(54px, 7.4vmin, 70px)", glow: "rgba(224,90,60,0.5)" },
-    { id: "jupiter", size: "clamp(80px, 12.5vmin, 118px)", glow: "rgba(224,160,80,0.45)" },
-    { id: "saturn", size: "clamp(70px, 10.5vmin, 100px)", glow: "rgba(232,210,150,0.45)" },
-    { id: "uranus", size: "clamp(58px, 8.2vmin, 80px)", glow: "rgba(127,219,218,0.45)" },
-    { id: "neptune", size: "clamp(56px, 8vmin, 78px)", glow: "rgba(65,105,225,0.5)" },
-    { id: "pluto", size: "clamp(48px, 6.2vmin, 58px)", glow: "rgba(212,165,116,0.4)" }
+    { id: "mercury", size: "clamp(72px, 10vmin, 96px)", glow: "rgba(200,180,160,0.45)" },
+    { id: "venus", size: "clamp(80px, 11vmin, 106px)", glow: "rgba(230,190,90,0.45)" },
+    { id: "earth", size: "clamp(84px, 11.5vmin, 112px)", glow: "rgba(80,150,255,0.5)", hasMoon: true },
+    { id: "mars", size: "clamp(76px, 10.4vmin, 98px)", glow: "rgba(224,90,60,0.5)" },
+    { id: "jupiter", size: "clamp(112px, 17.5vmin, 165px)", glow: "rgba(224,160,80,0.45)" },
+    { id: "saturn", size: "clamp(98px, 14.7vmin, 140px)", glow: "rgba(232,210,150,0.45)" },
+    { id: "uranus", size: "clamp(80px, 11.5vmin, 112px)", glow: "rgba(127,219,218,0.45)" },
+    { id: "neptune", size: "clamp(78px, 11.2vmin, 110px)", glow: "rgba(65,105,225,0.5)" },
+    { id: "pluto", size: "clamp(66px, 8.7vmin, 82px)", glow: "rgba(212,165,116,0.4)" }
   ];
 
   const ORBIT_DECO = `
     <svg class="orbit-deco" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       <g class="port">
-        <ellipse cx="50" cy="29" rx="24" ry="16"/>
-        <ellipse cx="50" cy="29" rx="40" ry="24"/>
-        <ellipse cx="50" cy="48" rx="48" ry="36"/>
-        <ellipse cx="50" cy="52" rx="46" ry="44"/>
+        <ellipse cx="50" cy="30" rx="22" ry="15"/>
+        <ellipse cx="50" cy="30" rx="36" ry="22"/>
+        <ellipse cx="50" cy="48" rx="44" ry="34"/>
+        <ellipse cx="50" cy="52" rx="44" ry="40"/>
       </g>
       <g class="land">
-        <ellipse cx="11" cy="52" rx="18" ry="28"/>
-        <ellipse cx="18" cy="52" rx="28" ry="38"/>
-        <ellipse cx="32" cy="52" rx="42" ry="42"/>
-        <ellipse cx="48" cy="52" rx="56" ry="44"/>
+        <ellipse cx="22" cy="50" rx="16" ry="28"/>
+        <ellipse cx="30" cy="50" rx="26" ry="34"/>
+        <ellipse cx="40" cy="50" rx="36" ry="38"/>
+        <ellipse cx="48" cy="50" rx="44" ry="40"/>
       </g>
     </svg>`;
 
@@ -868,13 +868,13 @@
     return false;
   }
 
-  function showToast(msg) {
+  function showToast(msg, ms) {
     const el = $("toast");
     if (!el) return;
     el.textContent = msg;
     el.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
+    toastTimer = setTimeout(() => { el.hidden = true; }, ms || 3200);
   }
   function hideToast() {
     const el = $("toast");
@@ -1600,8 +1600,16 @@
   }
 
   function certFilename(name) {
-    const safe = String(name || "상상행성").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "_").slice(0, 24) || "상상행성";
+    const safe = String(name || "상상행성").replace(/[\\/:*?"<>|\u0000-\u001F]/g, "").replace(/\s+/g, "_").slice(0, 24) || "상상행성";
     return "행성발견증서_" + safe + ".png";
+  }
+
+  function certFilenameAscii(when) {
+    const d = when instanceof Date ? when : new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return "planet-certificate-" +
+      d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+      "-" + pad(d.getHours()) + pad(d.getMinutes()) + ".png";
   }
 
   async function waitForFonts() {
@@ -2655,7 +2663,7 @@
       const img = $("cert-preview-img");
       img.alt = (planet.name || "행성") + " 발견 증서";
       img.src = url;
-      $("cert-hint").hidden = !isAppleTouch();
+      setupCertActions();
       hideToast();
       showOverlay("cert-overlay");
     } catch (e) {
@@ -2680,31 +2688,76 @@
     });
   }
 
-  async function saveCertificateFile() {
+  function certificateShareFile() {
+    if (!certState.blob) return null;
+    const filename = certState.filename || "행성발견증서.png";
+    try {
+      return new File([certState.blob], filename, { type: "image/png" });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function canShareCertificate() {
+    const file = certificateShareFile();
+    if (!file || typeof navigator.share !== "function" || typeof navigator.canShare !== "function") return false;
+    try {
+      return !!navigator.canShare({ files: [file] });
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setupCertActions() {
+    const saveBtn = $("btn-cert-save");
+    const shareBtn = $("btn-cert-share");
+    const hint = $("cert-hint");
+    const apple = isAppleTouch();
+    if (hint) hint.hidden = !apple;
+    if (saveBtn) saveBtn.textContent = apple ? "사진에 저장" : "갤러리에 저장";
+    if (shareBtn) shareBtn.hidden = apple || !canShareCertificate();
+  }
+
+  function downloadCertificate() {
     if (!certState.blob) return;
     const filename = certState.filename || "행성발견증서.png";
-    const file = new File([certState.blob], filename, { type: "image/png" });
-    const canShare = typeof navigator.canShare === "function" && navigator.canShare({ files: [file] });
-    if (canShare) {
-      try {
-        await navigator.share({ files: [file], title: "새로운 행성 발견 증서" });
-        return;
-      } catch (e) {
-        if (e && e.name === "AbortError") return;
-      }
-    }
-    if (isAppleTouch()) {
-      $("cert-hint").hidden = false;
-      return;
-    }
     const a = document.createElement("a");
     const url = URL.createObjectURL(certState.blob);
     a.href = url;
     a.download = filename;
+    a.rel = "noopener";
+    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    showToast("저장했어요! 갤러리의 다운로드 앨범에서 볼 수 있어요.", 5500);
+  }
+
+  async function shareCertificate() {
+    const file = certificateShareFile();
+    if (!file || typeof navigator.share !== "function") return false;
+    try {
+      if (typeof navigator.canShare === "function" && !navigator.canShare({ files: [file] })) return false;
+      await navigator.share({ files: [file], title: "새로운 행성 발견 증서" });
+      return true;
+    } catch (e) {
+      if (e && e.name === "AbortError") return true;
+      return false;
+    }
+  }
+
+  async function onCertSaveClick() {
+    if (!certState.blob) return;
+    if (isAppleTouch()) {
+      const ok = await shareCertificate();
+      if (!ok) {
+        const hint = $("cert-hint");
+        if (hint) hint.hidden = false;
+      }
+      return;
+    }
+    downloadCertificate();
   }
 
 
@@ -2757,7 +2810,8 @@
       const p = draftAsPlanet();
       if (p) openCertificate(p);
     });
-    $("btn-cert-download").addEventListener("click", saveCertificateFile);
+    $("btn-cert-save").addEventListener("click", onCertSaveClick);
+    $("btn-cert-share").addEventListener("click", () => { shareCertificate(); });
     $("btn-cert-close").addEventListener("click", closeCertificate);
     $("builder-opts").addEventListener("click", (e) => {
       const btn = e.target.closest("[data-k]");
@@ -2841,7 +2895,20 @@
     navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
   }
 
+  function syncAppHeight() {
+    const vv = window.visualViewport;
+    const h = Math.max(1, Math.round((vv && vv.height) || window.innerHeight || 0));
+    document.documentElement.style.setProperty("--app-height", h + "px");
+  }
+
   function init() {
+    syncAppHeight();
+    window.addEventListener("resize", syncAppHeight);
+    window.addEventListener("orientationchange", syncAppHeight);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", syncAppHeight);
+      window.visualViewport.addEventListener("scroll", syncAppHeight);
+    }
     preloadAstronautSuit().catch(() => {});
     buildStars();
     buildSystem();
@@ -2871,7 +2938,12 @@
       ASTRO_VISOR,
       ASTRO_VB_W,
       ASTRO_VB_H,
-      ASTRO_TIGHT
+      ASTRO_TIGHT,
+      certFilename,
+      certFilenameAscii,
+      downloadCertificate,
+      canShareCertificate,
+      isAppleTouch
     };
   }
 

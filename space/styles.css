@@ -38,13 +38,18 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; margin: 0; }
-html { height: -webkit-fill-available; }
+html { height: -webkit-fill-available; height: 100dvh; height: var(--app-height, 100dvh); }
 body {
   font-family: "Gothic A1", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Malgun Gothic", sans-serif;
   color: var(--ink);
   background: var(--bg);
   min-height: 100%;
   min-height: 100dvh;
+  min-height: var(--app-height, 100dvh);
+  height: 100%;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
+  max-height: var(--app-height, 100dvh);
   overflow: hidden;
   word-break: keep-all;
   user-select: none;
@@ -115,6 +120,9 @@ input, textarea { font: inherit; color: inherit; user-select: text; -webkit-user
   z-index: 1;
   height: 100%;
   height: 100dvh;
+  height: var(--app-height, 100dvh);
+  max-height: var(--app-height, 100dvh);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
@@ -192,6 +200,7 @@ input, textarea { font: inherit; color: inherit; user-select: text; -webkit-user
   height: 100%;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
 }
 .orbit-deco ellipse {
   fill: none;
@@ -222,28 +231,28 @@ input, textarea { font: inherit; color: inherit; user-select: text; -webkit-user
 }
 
 /* Portrait: sun upper-center, inner planets around it, outer planets below */
-.sun-wrap { --x: 50%; --y: 29%; --amp: 0px; --dur: 20s; }
-.system > .body[data-id="mercury"] { --x: 27%; --y: 16%; --amp: 8px; --dur: 11s; --delay: -2s; }
-.system > .body[data-id="venus"]   { --x: 73%; --y: 16%; --amp: 9px; --dur: 14s; --delay: -5s; }
-.system .cluster                  { --x: 27%; --y: 45%; --amp: 9px; --dur: 18s; --delay: -8s; }
-.system > .body[data-id="mars"]    { --x: 73%; --y: 45%; --amp: 10px; --dur: 16s; --delay: -3s; }
-.system > .body[data-id="jupiter"] { --x: 18%; --y: 67%; --amp: 11px; --dur: 22s; --delay: -6s; }
+.sun-wrap { --x: 50%; --y: 30%; --amp: 0px; --dur: 20s; }
+.system > .body[data-id="mercury"] { --x: 28%; --y: 18%; --amp: 8px; --dur: 11s; --delay: -2s; }
+.system > .body[data-id="venus"]   { --x: 72%; --y: 18%; --amp: 9px; --dur: 14s; --delay: -5s; }
+.system .cluster                  { --x: 28%; --y: 45%; --amp: 9px; --dur: 18s; --delay: -8s; }
+.system > .body[data-id="mars"]    { --x: 72%; --y: 45%; --amp: 10px; --dur: 16s; --delay: -3s; }
+.system > .body[data-id="jupiter"] { --x: 18%; --y: 66%; --amp: 11px; --dur: 22s; --delay: -6s; }
 .system > .body[data-id="saturn"]  { --x: 50%; --y: 66%; --amp: 10px; --dur: 26s; --delay: -10s; }
-.system > .body[data-id="uranus"]  { --x: 82%; --y: 67%; --amp: 9px; --dur: 24s; --delay: -4s; }
-.system > .body[data-id="neptune"] { --x: 32%; --y: 87%; --amp: 8px; --dur: 28s; --delay: -12s; }
-.system > .body[data-id="pluto"]   { --x: 70%; --y: 87%; --amp: 8px; --dur: 32s; --delay: -7s; }
+.system > .body[data-id="uranus"]  { --x: 82%; --y: 66%; --amp: 9px; --dur: 24s; --delay: -4s; }
+.system > .body[data-id="neptune"] { --x: 32%; --y: 84%; --amp: 8px; --dur: 28s; --delay: -12s; }
+.system > .body[data-id="pluto"]   { --x: 70%; --y: 84%; --amp: 8px; --dur: 32s; --delay: -7s; }
 
 @media (orientation: landscape) {
-  .sun-wrap { --x: 11%; --y: 52%; }
-  .system > .body[data-id="mercury"] { --x: 25%; --y: 28%; }
-  .system > .body[data-id="venus"]   { --x: 28%; --y: 74%; }
-  .system .cluster                  { --x: 40%; --y: 32%; }
-  .system > .body[data-id="mars"]    { --x: 46%; --y: 76%; }
-  .system > .body[data-id="jupiter"] { --x: 58%; --y: 30%; }
+  .sun-wrap { --x: 15%; --y: 50%; }
+  .system > .body[data-id="mercury"] { --x: 30%; --y: 30%; }
+  .system > .body[data-id="venus"]   { --x: 32%; --y: 72%; }
+  .system .cluster                  { --x: 46%; --y: 32%; }
+  .system > .body[data-id="mars"]    { --x: 50%; --y: 74%; }
+  .system > .body[data-id="jupiter"] { --x: 62%; --y: 30%; }
   .system > .body[data-id="saturn"]  { --x: 70%; --y: 72%; }
-  .system > .body[data-id="uranus"]  { --x: 82%; --y: 28%; }
-  .system > .body[data-id="neptune"] { --x: 90%; --y: 68%; }
-  .system > .body[data-id="pluto"]   { --x: 95%; --y: 38%; }
+  .system > .body[data-id="uranus"]  { --x: 80%; --y: 30%; }
+  .system > .body[data-id="neptune"] { --x: 86%; --y: 70%; }
+  .system > .body[data-id="pluto"]   { --x: 90%; --y: 42%; }
 }
 
 .body {
@@ -276,7 +285,7 @@ input, textarea { font: inherit; color: inherit; user-select: text; -webkit-user
 .planet-name {
   margin-top: 2px;
   font-family: "Jua", sans-serif;
-  font-size: clamp(12px, 1.8vmin, 16px);
+  font-size: clamp(13px, 2.2vmin, 18px);
   color: #fff;
   text-shadow: 0 1px 2px #000, 0 0 8px #000;
   white-space: nowrap;
@@ -329,14 +338,14 @@ input, textarea { font: inherit; color: inherit; user-select: text; -webkit-user
   top: 0;
   animation: moon-unspin 7.5s linear infinite;
   pointer-events: auto;
-  --size: clamp(44px, 6vmin, 54px);
+  --size: clamp(56px, 8vmin, 72px);
 }
 @keyframes moon-unspin {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(-360deg); }
 }
 
-.sun-wrap .body { --size: clamp(84px, 15vmin, 132px); }
+.sun-wrap .body { --size: clamp(118px, 21vmin, 185px); }
 .sun-glow {
   position: absolute;
   inset: -28%;
@@ -678,7 +687,7 @@ body.paused .c-moon-orbit {
   .topbar h1 { font-size: clamp(22px, 4.4vh, 34px); }
   .chip { min-height: 44px; font-size: 15px; padding: 0 12px; }
   .stage { flex-direction: row; padding: 2px 8px 6px; }
-  .system { flex: 1; }
+  .system { flex: 1; min-width: 0; }
   .card {
     display: grid;
     grid-template-columns: 200px 1fr;
@@ -701,6 +710,15 @@ body.paused .c-moon-orbit {
   .card-actions { grid-column: 1 / -1; margin-top: 10px; }
   .facts li, .fun, .meta-item { font-size: 16px; }
   .stamp-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+@media (orientation: landscape) and (max-height: 650px) {
+  .topbar { min-height: 44px; padding: 4px 12px 0; }
+  .topbar h1 { font-size: clamp(20px, 4.2vh, 28px); }
+  .chip { min-height: 40px; font-size: 14px; padding: 0 10px; }
+  .stage { padding: 0 6px 4px; }
+  .galaxy-btn { top: 0; left: 4px; width: clamp(64px, 11vmin, 88px); }
+  .galaxy-btn .planet-art { width: clamp(56px, 10vmin, 80px); height: clamp(56px, 10vmin, 80px); }
 }
 
 @media (max-width: 420px) {
@@ -1168,7 +1186,16 @@ body.paused .c-moon-orbit {
   box-shadow: 0 4px 0 #D4A017;
   flex: 1 0 100%;
 }
+.btn-cert-share {
+  background: linear-gradient(180deg, #DCE6FF, #B7C8F5);
+  color: #24305A;
+  box-shadow: 0 4px 0 #7A8FD0;
+  flex: 1 1 auto;
+  font-size: 20px;
+}
+.btn-cert-share[hidden] { display: none !important; }
 .card-actions { flex-wrap: wrap; }
+.cert-actions { align-items: stretch; }
 .card-actions-custom { margin-top: 12px; }
 .card-actions-custom[hidden] { display: none !important; }
 
