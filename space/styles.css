@@ -53,6 +53,7 @@ body {
 }
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; padding: 0; }
 input, textarea { font: inherit; color: inherit; user-select: text; -webkit-user-select: text; }
+[hidden] { display: none !important; }
 .display { font-family: "Jua", "Apple SD Gothic Neo", sans-serif; letter-spacing: 0.02em; }
 
 /* ---------- sky ---------- */

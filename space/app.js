@@ -515,7 +515,7 @@
     $("card-facts").innerHTML = b.facts
       .map((t, i) => `<li data-n="${i + 1}">${escapeHtml(t)}</li>`)
       .join("");
-    $("card-fun").innerHTML = `<strong>알고 봤니?</strong> ${escapeHtml(b.fun)}`;
+    $("card-fun").innerHTML = `<strong>${escapeHtml(FUN_LABEL)}</strong> ${escapeHtml(b.fun)}`;
     $("card-meta").innerHTML = `
       <div class="meta-item"><span class="label">${escapeHtml(b.tempLabel)}</span>${escapeHtml(b.temp)}</div>
       <div class="meta-item"><span class="label">가려면</span>${escapeHtml(b.travel)}</div>`;
@@ -559,7 +559,7 @@
     const parts = [
       `${b.name}. ${b.kicker}.`,
       ...b.facts,
-      `알고 봤니? ${b.fun}`,
+      `${FUN_LABEL}. ${b.fun}`,
       `${b.tempLabel}: ${b.temp}`,
       b.travel ? `가려면, ${b.travel}` : "",
       b.custom && b.explorerName ? `발견한 탐험가는 ${b.explorerName}예요.` : ""
@@ -1461,65 +1461,127 @@
     }
   }
 
+  const ASTRO_VB_W = 200;
+  const ASTRO_VB_H = 300;
+  const ASTRO_VISOR = { cx: 100, cy: 92, r: 48 };
+  const ASTRO_SHINE = [
+    { cx: 78, cy: 74, rx: 20, ry: 12 },
+    { cx: 124, cy: 86, rx: 9, ry: 6 }
+  ];
+  const FUN_LABEL = "쉿! 나만 아는 비밀";
+
   function defaultFaceSvg() {
-    return `<circle cx="100" cy="90" r="44" fill="#F8C9A8"/>
-      <path d="M58 78 Q100 42 142 78 Q128 70 100 68 Q72 70 58 78Z" fill="#5A3A28"/>
-      <ellipse cx="86" cy="86" rx="5.2" ry="6.2" fill="#2A1A10"/>
-      <ellipse cx="114" cy="86" rx="5.2" ry="6.2" fill="#2A1A10"/>
-      <circle cx="88" cy="84" r="1.7" fill="#fff"/>
-      <circle cx="116" cy="84" r="1.7" fill="#fff"/>
-      <ellipse cx="78" cy="98" rx="7" ry="4" fill="#F5A0A0" opacity=".55"/>
-      <ellipse cx="122" cy="98" rx="7" ry="4" fill="#F5A0A0" opacity=".55"/>
-      <path d="M90 110 Q100 118 110 110" fill="none" stroke="#C06A6A" stroke-width="2.6" stroke-linecap="round"/>`;
+    const { cx, cy, r } = ASTRO_VISOR;
+    return `<circle cx="${cx}" cy="${cy + 6}" r="${r + 2}" fill="#F8CDB0"/>
+      <path d="M${cx - 48} ${cy - 4} Q${cx} ${cy - 52} ${cx + 48} ${cy - 4} Q${cx + 30} ${cy - 18} ${cx} ${cy - 16} Q${cx - 30} ${cy - 18} ${cx - 48} ${cy - 4}Z" fill="#6A3E22"/>
+      <path d="M${cx - 36} ${cy - 8} Q${cx - 18} ${cy - 28} ${cx} ${cy - 10}" fill="none" stroke="#5A321C" stroke-width="1" opacity=".25"/>
+      <ellipse cx="${cx - 16}" cy="${cy}" rx="8.5" ry="10" fill="#2A1A12"/>
+      <ellipse cx="${cx + 16}" cy="${cy}" rx="8.5" ry="10" fill="#2A1A12"/>
+      <ellipse cx="${cx - 13.5}" cy="${cy - 3}" rx="3.2" ry="3.6" fill="#fff"/>
+      <ellipse cx="${cx + 18.5}" cy="${cy - 3}" rx="2.4" ry="2.6" fill="#fff"/>
+      <ellipse cx="${cx - 28}" cy="${cy + 16}" rx="8" ry="4.5" fill="#F4A0A8" opacity=".55"/>
+      <ellipse cx="${cx + 28}" cy="${cy + 16}" rx="8" ry="4.5" fill="#F4A0A8" opacity=".55"/>
+      <path d="M${cx - 14} ${cy + 26} Q${cx} ${cy + 36} ${cx + 14} ${cy + 26}" fill="none" stroke="#C45A66" stroke-width="3" stroke-linecap="round"/>`;
+  }
+
+  function visorShineSvg() {
+    return ASTRO_SHINE.map((s, i) =>
+      `<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx}" ry="${s.ry}" fill="#fff" opacity="${i === 0 ? 0.55 : 0.28}"/>`
+    ).join("");
   }
 
   function astronautSVG(photo, suffix, opts) {
     const x = "ast-" + (suffix || "a");
     const skipPhoto = opts && opts.forCanvas;
+    const { cx, cy, r } = ASTRO_VISOR;
     const face = !skipPhoto && photo
-      ? `<image href="${photo}" x="58" y="44" width="84" height="84" preserveAspectRatio="xMidYMid slice"/>`
+      ? `<image href="${photo}" x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" preserveAspectRatio="xMidYMid slice"/>`
       : defaultFaceSvg();
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" class="astronaut-art" width="200" height="280" aria-hidden="true">
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ASTRO_VB_W} ${ASTRO_VB_H}" class="astronaut-art" width="${ASTRO_VB_W}" height="${ASTRO_VB_H}" aria-hidden="true">
       <defs>
-        <linearGradient id="suit${x}" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="suit${x}" x1="0.15" y1="0" x2="0.9" y2="1">
           <stop offset="0%" stop-color="#FFFFFF"/>
-          <stop offset="55%" stop-color="#E8EEF8"/>
-          <stop offset="100%" stop-color="#C5D0E8"/>
+          <stop offset="38%" stop-color="#F3F7FF"/>
+          <stop offset="72%" stop-color="#D5DEF0"/>
+          <stop offset="100%" stop-color="#B7C4DE"/>
         </linearGradient>
-        <linearGradient id="pack${x}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#6E86D4"/>
-          <stop offset="100%" stop-color="#3E56A8"/>
+        <linearGradient id="suitShade${x}" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#9AADC8" stop-opacity=".35"/>
+          <stop offset="45%" stop-color="#fff" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#7E93B3" stop-opacity=".28"/>
         </linearGradient>
-        <clipPath id="visor-clip-${x}"><circle cx="100" cy="86" r="42"/></clipPath>
+        <linearGradient id="pack${x}" x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0%" stop-color="#8AA0E8"/>
+          <stop offset="55%" stop-color="#5C74C8"/>
+          <stop offset="100%" stop-color="#3A52A4"/>
+        </linearGradient>
+        <radialGradient id="helm${x}" cx="38%" cy="32%" r="70%">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="45%" stop-color="#F4F7FF"/>
+          <stop offset="100%" stop-color="#C5D0E6"/>
+        </radialGradient>
+        <radialGradient id="glove${x}" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="70%" stop-color="#E4EAF6"/>
+          <stop offset="100%" stop-color="#B8C4DC"/>
+        </radialGradient>
+        <radialGradient id="boot${x}" cx="40%" cy="25%" r="75%">
+          <stop offset="0%" stop-color="#EEF3FB"/>
+          <stop offset="100%" stop-color="#A8B6D0"/>
+        </radialGradient>
+        <radialGradient id="glass${x}" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stop-color="#2A4A78" stop-opacity=".15"/>
+          <stop offset="70%" stop-color="#163056" stop-opacity=".08"/>
+          <stop offset="100%" stop-color="#0B1A30" stop-opacity=".2"/>
+        </radialGradient>
+        <clipPath id="visor-clip-${x}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
       </defs>
-      <rect x="58" y="132" width="84" height="92" rx="18" fill="url(#pack${x})"/>
-      <rect x="68" y="142" width="64" height="14" rx="6" fill="#8AA0E0"/>
-      <circle cx="128" cy="180" r="8" fill="#FFC44D"/>
-      <circle cx="128" cy="180" r="3.5" fill="#FFF3C4"/>
-      <rect x="66" y="214" width="28" height="50" rx="12" fill="url(#suit${x})"/>
-      <rect x="106" y="214" width="28" height="50" rx="12" fill="url(#suit${x})"/>
-      <ellipse cx="80" cy="262" rx="18" ry="9" fill="#D4DEEF"/>
-      <ellipse cx="120" cy="262" rx="18" ry="9" fill="#D4DEEF"/>
-      <rect x="40" y="138" width="26" height="60" rx="13" fill="url(#suit${x})" transform="rotate(10 53 168)"/>
-      <rect x="134" y="138" width="26" height="60" rx="13" fill="url(#suit${x})" transform="rotate(-10 147 168)"/>
-      <circle cx="46" cy="202" r="13" fill="#E8EEF8" stroke="#B8C4DC" stroke-width="2"/>
-      <circle cx="154" cy="202" r="13" fill="#E8EEF8" stroke="#B8C4DC" stroke-width="2"/>
-      <rect x="62" y="132" width="76" height="90" rx="24" fill="url(#suit${x})" stroke="#C9D4EE" stroke-width="3"/>
-      <rect x="88" y="162" width="28" height="24" rx="6" fill="#2C4C9A"/>
-      <circle cx="96" cy="174" r="3.6" fill="#3DDC97"/>
-      <circle cx="108" cy="174" r="3.6" fill="#FF8A3D"/>
-      <circle cx="76" cy="170" r="13" fill="#FFF8E8" stroke="#D4A017" stroke-width="2"/>
-      <circle cx="76" cy="170" r="9.5" fill="#2C4C9A"/>
-      <polygon points="76,162 78,168 84,168 79,172 81,178 76,174 71,178 73,172 68,168 74,168" fill="#FFD56A"/>
-      <ellipse cx="100" cy="128" rx="34" ry="11" fill="#C5D0E8"/>
-      <circle cx="100" cy="86" r="60" fill="#F4F7FF" stroke="#B8C4DC" stroke-width="6"/>
-      <circle cx="100" cy="86" r="54" fill="none" stroke="#EEF3FA" stroke-width="3"/>
-      <circle cx="100" cy="86" r="47" fill="#1A2744"/>
+      <rect x="61" y="172" width="78" height="78" rx="20" fill="url(#pack${x})"/>
+      <rect x="70" y="180" width="60" height="12" rx="6" fill="#A8BAF0" opacity=".9"/>
+      <circle cx="126" cy="214" r="8" fill="#FFD36A"/>
+      <circle cx="126" cy="214" r="4" fill="#FFF6D0"/>
+      <circle cx="74" cy="214" r="6" fill="#7C9CFF"/>
+      <rect x="70" y="234" width="26" height="42" rx="13" fill="url(#suit${x})"/>
+      <rect x="104" y="234" width="26" height="42" rx="13" fill="url(#suit${x})"/>
+      <ellipse cx="83" cy="274" rx="20" ry="13" fill="url(#boot${x})" stroke="#C5D0E4" stroke-width="2"/>
+      <ellipse cx="117" cy="274" rx="20" ry="13" fill="url(#boot${x})" stroke="#C5D0E4" stroke-width="2"/>
+      <ellipse cx="78" cy="270" rx="6" ry="3" fill="#fff" opacity=".45"/>
+      <ellipse cx="112" cy="270" rx="6" ry="3" fill="#fff" opacity=".45"/>
+      <rect x="34" y="176" width="30" height="50" rx="15" fill="url(#suit${x})" transform="rotate(14 49 201)"/>
+      <rect x="136" y="176" width="30" height="50" rx="15" fill="url(#suit${x})" transform="rotate(-14 151 201)"/>
+      <circle cx="42" cy="228" r="16" fill="url(#glove${x})" stroke="#C5D0E4" stroke-width="2.2"/>
+      <circle cx="158" cy="228" r="16" fill="url(#glove${x})" stroke="#C5D0E4" stroke-width="2.2"/>
+      <path d="M34 228 H50" stroke="#B0BED6" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M150 228 H166" stroke="#B0BED6" stroke-width="1.6" stroke-linecap="round"/>
+      <rect x="58" y="168" width="84" height="78" rx="28" fill="url(#suit${x})" stroke="#C9D4EE" stroke-width="2.5"/>
+      <rect x="58" y="168" width="84" height="78" rx="28" fill="url(#suitShade${x})"/>
+      <ellipse cx="92" cy="188" rx="18" ry="8" fill="#fff" opacity=".35"/>
+      <rect x="90" y="192" width="28" height="22" rx="7" fill="#2C4C9A"/>
+      <circle cx="98" cy="203" r="3.4" fill="#5BE0A0"/>
+      <circle cx="108" cy="203" r="3.4" fill="#FFB14A"/>
+      <circle cx="118" cy="203" r="3.4" fill="#7CD4FF"/>
+      <circle cx="74" cy="198" r="14" fill="#FFF8E0" stroke="#E0B020" stroke-width="2.2"/>
+      <circle cx="74" cy="198" r="10.5" fill="#2A468C"/>
+      <polygon points="74,189 76,195 83,195 77.5,199 79.5,206 74,202 68.5,206 70.5,199 65,195 72,195" fill="#FFE36A"/>
+      <polygon points="80,201 81,204 84,204 81.6,206 82.6,209 80,207 77.4,209 78.4,206 76,204 79,204" fill="#FFF4B8"/>
+      <ellipse cx="100" cy="164" rx="36" ry="12" fill="#D5DEEE"/>
+      <ellipse cx="100" cy="162" rx="30" ry="6" fill="#F6F8FF"/>
+      <circle cx="${cx}" cy="${cy}" r="72" fill="url(#helm${x})" stroke="#C5D0E4" stroke-width="5"/>
+      <circle cx="${cx}" cy="${cy}" r="66" fill="none" stroke="#FFFFFF" stroke-width="3.5" opacity=".7"/>
+      <circle cx="${cx}" cy="${cy}" r="57" fill="none" stroke="#E8C25A" stroke-width="5"/>
+      <circle cx="${cx}" cy="${cy}" r="57" fill="none" stroke="#FFF3C4" stroke-width="1.6"/>
+      <circle cx="${cx}" cy="${cy}" r="51.5" fill="#15233C"/>
       <g clip-path="url(#visor-clip-${x})">${face}</g>
-      <ellipse cx="82" cy="70" rx="16" ry="10" fill="#fff" opacity=".45"/>
-      <ellipse cx="118" cy="78" rx="8" ry="5" fill="#fff" opacity=".2"/>
-      <path d="M148 40 Q156 18 170 28" fill="none" stroke="#C5D0E8" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="172" cy="28" r="6" fill="#FF8A3D"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#glass${x})"/>
+      <circle cx="${cx}" cy="${cy}" r="${r + 1.2}" fill="none" stroke="#F2E3A0" stroke-width="2.4"/>
+      ${visorShineSvg()}
+      <circle cx="46" cy="56" r="5" fill="#7C9CFF"/>
+      <circle cx="46" cy="56" r="2.2" fill="#E8F0FF"/>
+      <circle cx="154" cy="56" r="5" fill="#FF9A4A"/>
+      <circle cx="154" cy="56" r="2.2" fill="#FFE7C8"/>
+      <path d="M148 28 Q158 6 174 18" fill="none" stroke="#C5D0E4" stroke-width="4.2" stroke-linecap="round"/>
+      <circle cx="176" cy="18" r="7.5" fill="#FF8A3D"/>
+      <circle cx="176" cy="18" r="3.4" fill="#FFE0A0"/>
     </svg>`;
   }
 
@@ -1610,16 +1672,267 @@
     return used.length * lineHeight;
   }
 
+
+  function hexToRgba(hex, a) {
+    const n = String(hex || "#5B9FE8").replace("#", "");
+    const r = parseInt(n.slice(0, 2), 16) || 90;
+    const g = parseInt(n.slice(2, 4), 16) || 160;
+    const b = parseInt(n.slice(4, 6), 16) || 230;
+    return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  function drawStarSpark(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 4;
+      const rad = i % 2 === 0 ? size : size * 0.32;
+      if (i === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+      else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPlanetHalo(ctx, cx, cy, r, hex) {
+    const glow = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r * 1.55);
+    glow.addColorStop(0, hexToRgba(hex, 0.42));
+    glow.addColorStop(0.4, hexToRgba(hex, 0.22));
+    glow.addColorStop(0.75, "rgba(255, 244, 200, 0.16)");
+    glow.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 1.55, 0, Math.PI * 2);
+    ctx.fill();
+    const ring = ctx.createRadialGradient(cx, cy, r * 0.92, cx, cy, r * 1.18);
+    ring.addColorStop(0, "rgba(255,255,255,0)");
+    ring.addColorStop(0.55, "rgba(255,248,220,0.55)");
+    ring.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = ring;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 1.18, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawCurvedText(ctx, text, cx, cy, radius, midAngle) {
+    const chars = Array.from(text);
+    const pad = 5;
+    const widths = chars.map((ch) => ctx.measureText(ch).width + pad);
+    const total = widths.reduce((a, b) => a + b, 0);
+    let ang = midAngle - total / radius / 2;
+    chars.forEach((ch, i) => {
+      const w = widths[i];
+      const mid = ang + w / radius / 2;
+      ctx.save();
+      ctx.translate(cx + Math.cos(mid) * radius, cy + Math.sin(mid) * radius);
+      ctx.rotate(mid + Math.PI / 2);
+      ctx.fillText(ch, 0, 0);
+      ctx.restore();
+      ang += w / radius;
+    });
+  }
+
+  function drawRibbonTail(ctx, x, y, dir, len) {
+    const s = dir;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x + s * 18, y + 16, x + s * 36, y + 36, x + s * 28, y + len);
+    ctx.lineTo(x + s * 6, y + len - 8);
+    ctx.lineTo(x + s * 16, y + len + 16);
+    ctx.lineTo(x - s * 4, y + len - 6);
+    ctx.bezierCurveTo(x + s * 10, y + 40, x + s * 4, y + 18, x - s * 8, y + 4);
+    ctx.closePath();
+  }
+
+  function drawGoldSeal(ctx, cx, cy, r) {
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    ctx.save();
+    ctx.translate(4, 7);
+    ctx.fillStyle = "rgba(80, 50, 0, 0.22)";
+    ctx.beginPath();
+    const petals = 18;
+    for (let i = 0; i < petals; i++) {
+      const a = (i / petals) * Math.PI * 2 - Math.PI / 2;
+      const rr = r * 1.06;
+      const px = Math.cos(a) * rr;
+      const py = Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(px, py);
+      ctx.quadraticCurveTo(
+        Math.cos(a + Math.PI / petals) * (r * 0.86),
+        Math.sin(a + Math.PI / petals) * (r * 0.86),
+        Math.cos(a + Math.PI * 2 / petals) * rr,
+        Math.sin(a + Math.PI * 2 / petals) * rr
+      );
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    const leftRibbon = ctx.createLinearGradient(-r, 0, 0, r + 80);
+    leftRibbon.addColorStop(0, "#F3D56A");
+    leftRibbon.addColorStop(0.5, "#E0A81E");
+    leftRibbon.addColorStop(1, "#C48410");
+    ctx.fillStyle = leftRibbon;
+    drawRibbonTail(ctx, -r * 0.18, r * 0.55, -1, r * 0.95);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(140, 90, 0, 0.45)";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    const rightRibbon = ctx.createLinearGradient(0, 0, r, r + 80);
+    rightRibbon.addColorStop(0, "#F7E08A");
+    rightRibbon.addColorStop(0.5, "#E8B423");
+    rightRibbon.addColorStop(1, "#C4920A");
+    ctx.fillStyle = rightRibbon;
+    drawRibbonTail(ctx, r * 0.18, r * 0.55, 1, r * 0.95);
+    ctx.fill();
+    ctx.stroke();
+
+    const gold = ctx.createRadialGradient(-r * 0.25, -r * 0.3, r * 0.1, 0, 0, r * 1.05);
+    gold.addColorStop(0, "#FFF4C2");
+    gold.addColorStop(0.35, "#F0C94A");
+    gold.addColorStop(0.75, "#D4A017");
+    gold.addColorStop(1, "#A87308");
+    ctx.fillStyle = gold;
+    ctx.beginPath();
+    for (let i = 0; i < petals; i++) {
+      const a = (i / petals) * Math.PI * 2 - Math.PI / 2;
+      const rr = r * 1.05;
+      if (i === 0) ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      ctx.quadraticCurveTo(
+        Math.cos(a + Math.PI / petals) * (r * 0.86),
+        Math.sin(a + Math.PI / petals) * (r * 0.86),
+        Math.cos(a + Math.PI * 2 / petals) * rr,
+        Math.sin(a + Math.PI * 2 / petals) * rr
+      );
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#8A5A08";
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.82, 0, Math.PI * 2);
+    ctx.fillStyle = "#FBE38A";
+    ctx.fill();
+    ctx.strokeStyle = "#C4920A";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    const band = ctx.createRadialGradient(0, 0, r * 0.46, 0, 0, r * 0.82);
+    band.addColorStop(0, "#3A2A86");
+    band.addColorStop(1, "#1E1A58");
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.78, 0, Math.PI * 2);
+    ctx.fillStyle = band;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+    const center = ctx.createRadialGradient(-r * 0.08, -r * 0.1, 4, 0, 0, r * 0.5);
+    center.addColorStop(0, "#FFF6D0");
+    center.addColorStop(0.55, "#F0C94A");
+    center.addColorStop(1, "#C4920A");
+    ctx.fillStyle = center;
+    ctx.fill();
+    ctx.strokeStyle = "#F8E7A0";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = "#FFF6D8";
+    ctx.strokeStyle = "rgba(20, 16, 50, 0.35)";
+    ctx.lineWidth = 2.2;
+    ctx.font = '700 20px "Jua", "Gothic A1", sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    drawCurvedText(ctx, "우주 탐험대", 0, 0, r * 0.64, -Math.PI / 2);
+    ctx.fillStyle = "#F4D56A";
+    drawStarSpark(ctx, 0, r * 0.62, 7, "#F4D56A");
+
+    ctx.save();
+    ctx.translate(0, 4);
+    ctx.fillStyle = "#2C4C9A";
+    ctx.beginPath();
+    ctx.moveTo(0, -r * 0.28);
+    ctx.quadraticCurveTo(r * 0.16, -r * 0.08, r * 0.15, r * 0.1);
+    ctx.lineTo(0, r * 0.22);
+    ctx.lineTo(-r * 0.15, r * 0.1);
+    ctx.quadraticCurveTo(-r * 0.16, -r * 0.08, 0, -r * 0.28);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#1A2F66";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, -r * 0.06, r * 0.07, 0, Math.PI * 2);
+    ctx.fillStyle = "#E8F4FF";
+    ctx.fill();
+    ctx.fillStyle = "#E85A5A";
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.15, r * 0.1);
+    ctx.lineTo(-r * 0.26, r * 0.22);
+    ctx.lineTo(-r * 0.06, r * 0.14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(r * 0.15, r * 0.1);
+    ctx.lineTo(r * 0.26, r * 0.22);
+    ctx.lineTo(r * 0.06, r * 0.14);
+    ctx.closePath();
+    ctx.fill();
+    const flame = ctx.createLinearGradient(0, r * 0.18, 0, r * 0.36);
+    flame.addColorStop(0, "#FFE36A");
+    flame.addColorStop(1, "#FF7A2A");
+    ctx.fillStyle = flame;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.07, r * 0.2);
+    ctx.quadraticCurveTo(0, r * 0.38, r * 0.07, r * 0.2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(-r * 0.28, -r * 0.32, r * 0.78, -Math.PI * 0.9, -Math.PI * 0.15);
+    ctx.strokeStyle = "rgba(255,255,255,0.45)";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(r * 0.2, r * 0.28, r * 0.78, Math.PI * 0.1, Math.PI * 0.7);
+    ctx.strokeStyle = "rgba(100, 60, 0, 0.25)";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
   async function drawAstronautOnCanvas(ctx, x, y, height, photo) {
-    const width = height * (200 / 280);
+    const width = height * (ASTRO_VB_W / ASTRO_VB_H);
     const svg = astronautSVG(null, "cert-draw-" + Math.floor(Math.random() * 1e6), { forCanvas: true });
-    const img = await svgMarkupToImage(svg, 800, 1120);
+    const img = await svgMarkupToImage(svg, ASTRO_VB_W * 4, ASTRO_VB_H * 4);
     ctx.drawImage(img, x, y, width, height);
-    const sx = width / 200;
-    const sy = height / 280;
-    const cx = x + 100 * sx;
-    const cy = y + 86 * sy;
-    const r = 42 * Math.min(sx, sy);
+    const sx = width / ASTRO_VB_W;
+    const sy = height / ASTRO_VB_H;
+    const cx = x + ASTRO_VISOR.cx * sx;
+    const cy = y + ASTRO_VISOR.cy * sy;
+    const r = ASTRO_VISOR.r * Math.min(sx, sy);
     if (photo) {
       try {
         const face = await loadImage(photo);
@@ -1632,58 +1945,41 @@
       } catch (e) { /* keep default face */ }
     }
     ctx.save();
+    const glass = ctx.createRadialGradient(cx - r * 0.2, cy - r * 0.2, r * 0.1, cx, cy, r);
+    glass.addColorStop(0, "rgba(80,140,200,0.12)");
+    glass.addColorStop(1, "rgba(10,20,40,0.16)");
     ctx.beginPath();
-    ctx.ellipse(x + 82 * sx, y + 70 * sy, 16 * sx, 10 * sy, 0, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = glass;
     ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(x + 118 * sx, y + 78 * sy, 8 * sx, 5 * sy, 0, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255,0.22)";
-    ctx.fill();
+    ctx.lineWidth = Math.max(2, r * 0.06);
+    ctx.strokeStyle = "rgba(242, 227, 160, 0.95)";
+    ctx.stroke();
+    ASTRO_SHINE.forEach((s, i) => {
+      ctx.beginPath();
+      ctx.ellipse(x + s.cx * sx, y + s.cy * sy, s.rx * sx, s.ry * sy, 0, 0, Math.PI * 2);
+      ctx.fillStyle = i === 0 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.28)";
+      ctx.fill();
+    });
     ctx.restore();
     return { width, height };
   }
 
-  function drawGoldSeal(ctx, cx, cy, r) {
+  function drawCornerFlourish(ctx, x, y, rot) {
     ctx.save();
-    ctx.translate(cx, cy);
-    ctx.fillStyle = "#E8B423";
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.strokeStyle = "#D4A017";
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
-    for (let i = 0; i < 28; i++) {
-      const a = (i / 28) * Math.PI * 2 - Math.PI / 2;
-      const rr = i % 2 === 0 ? r : r * 0.82;
-      if (i === 0) ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
-      else ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#A67C00";
-    ctx.lineWidth = 3;
+    ctx.moveTo(0, 36);
+    ctx.quadraticCurveTo(0, 0, 36, 0);
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(0, 0, r * 0.68, 0, Math.PI * 2);
-    ctx.fillStyle = "#FFF3C4";
-    ctx.fill();
-    ctx.strokeStyle = "#C4920A";
-    ctx.lineWidth = 2;
+    ctx.moveTo(8, 28);
+    ctx.quadraticCurveTo(8, 8, 28, 8);
     ctx.stroke();
-    ctx.fillStyle = "#C4920A";
-    ctx.beginPath();
-    const sr = r * 0.16;
-    ctx.moveTo(0, -sr);
-    for (let i = 0; i < 5; i++) {
-      const a = -Math.PI / 2 + i * (Math.PI * 2 / 5);
-      const b = a + Math.PI / 5;
-      ctx.lineTo(Math.cos(a) * sr, Math.sin(a) * sr);
-      ctx.lineTo(Math.cos(b) * sr * 0.45, Math.sin(b) * sr * 0.45);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#6A4B00";
-    ctx.font = '700 18px "Gothic A1", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("우주 탐험대", 0, r * 0.32);
+    drawStarSpark(ctx, 18, 18, 5, "#E8C25A");
     ctx.restore();
   }
 
@@ -1697,114 +1993,187 @@
     canvas.height = H;
     const ctx = canvas.getContext("2d");
     const seed = Array.from(String(planet.id || "p")).reduce((a, c) => a + c.charCodeAt(0), 0);
-    let s = seed + 1;
+    let s = seed + 17;
     const rnd = () => {
       s = (s * 1664525 + 1013904223) % 4294967296;
       return s / 4294967296;
     };
 
-    ctx.fillStyle = "#12102A";
+    const sky = ctx.createLinearGradient(0, 0, W, H);
+    sky.addColorStop(0, "#161238");
+    sky.addColorStop(0.55, "#12102A");
+    sky.addColorStop(1, "#1A1140");
+    ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 220; i++) {
       const x = rnd() * W;
       const y = rnd() * H;
-      const r = rnd() * 1.8 + 0.4;
-      ctx.fillStyle = "rgba(255,255,255," + (0.35 + rnd() * 0.6) + ")";
+      const rad = rnd() * 1.7 + 0.35;
+      ctx.fillStyle = "rgba(255,255,255," + (0.3 + rnd() * 0.65) + ")";
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.arc(x, y, rad, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    const m = 46;
-    ctx.lineWidth = 14;
+    const m = 42;
+    ctx.lineWidth = 16;
     ctx.strokeStyle = "#E8B423";
     ctx.strokeRect(m, m, W - m * 2, H - m * 2);
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#FFF3C4";
-    ctx.strokeRect(m + 18, m + 18, W - (m + 18) * 2, H - (m + 18) * 2);
+    ctx.strokeRect(m + 16, m + 16, W - (m + 16) * 2, H - (m + 16) * 2);
 
-    ctx.fillStyle = "#F7F0DC";
-    const ix = m + 28;
-    const iy = m + 28;
-    const iw = W - (m + 28) * 2;
-    const ih = H - (m + 28) * 2;
+    const ix = m + 26;
+    const iy = m + 26;
+    const iw = W - (m + 26) * 2;
+    const ih = H - (m + 26) * 2;
+    const paper = ctx.createLinearGradient(ix, iy, ix, iy + ih);
+    paper.addColorStop(0, "#FFF8E8");
+    paper.addColorStop(0.5, "#F7F0DC");
+    paper.addColorStop(1, "#F3E6C4");
+    ctx.fillStyle = paper;
     ctx.fillRect(ix, iy, iw, ih);
 
     ctx.strokeStyle = "#D4A017";
     ctx.lineWidth = 4;
-    ctx.strokeRect(ix + 16, iy + 16, iw - 32, ih - 32);
+    ctx.strokeRect(ix + 14, iy + 14, iw - 28, ih - 28);
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = "#E8C96A";
-    ctx.strokeRect(ix + 24, iy + 24, iw - 48, ih - 48);
+    ctx.strokeRect(ix + 22, iy + 22, iw - 44, ih - 44);
+
+    drawCornerFlourish(ctx, ix + 36, iy + 36, 0);
+    drawCornerFlourish(ctx, ix + iw - 36, iy + 36, Math.PI / 2);
+    drawCornerFlourish(ctx, ix + iw - 36, iy + ih - 36, Math.PI);
+    drawCornerFlourish(ctx, ix + 36, iy + ih - 36, -Math.PI / 2);
 
     ctx.fillStyle = "#2C4C9A";
-    ctx.font = "64px Jua, sans-serif";
+    ctx.font = "68px Jua, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillText("새로운 행성 발견 증서", W / 2, iy + 44);
+    ctx.fillText("새로운 행성 발견 증서", W / 2, iy + 40);
     ctx.strokeStyle = "#D4A017";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(W / 2 - 260, iy + 124);
-    ctx.lineTo(W / 2 + 260, iy + 124);
+    ctx.moveTo(W / 2 - 300, iy + 122);
+    ctx.lineTo(W / 2 + 300, iy + 122);
     ctx.stroke();
+    drawStarSpark(ctx, W / 2 - 316, iy + 122, 8, "#E8C25A");
+    drawStarSpark(ctx, W / 2 + 316, iy + 122, 8, "#E8C25A");
 
-    const artW = 520;
-    const artH = 360;
+    const artW = 1140;
+    const artH = 760;
+    const pLeft = ix - 80;
+    const pTop = iy + 96;
+    const planetCx = pLeft + (90 / 180) * artW;
+    const planetCy = pTop + (60 / 120) * artH;
+    const planetR = (34 / 120) * artH;
+    drawPlanetHalo(ctx, planetCx, planetCy, planetR, planet.color || "#5B9FE8");
+    const sparks = [
+      [planetCx - planetR * 1.15, planetCy - planetR * 0.55, 11],
+      [planetCx + planetR * 1.2, planetCy - planetR * 0.7, 9],
+      [planetCx + planetR * 0.95, planetCy + planetR * 0.85, 8],
+      [planetCx - planetR * 0.9, planetCy + planetR * 0.95, 7],
+      [planetCx - planetR * 0.2, planetCy - planetR * 1.25, 10],
+      [planetCx + planetR * 1.35, planetCy + planetR * 0.15, 6]
+    ];
+    sparks.forEach(([sx, sy, sz]) => drawStarSpark(ctx, sx, sy, sz, rnd() > 0.4 ? "#FFF6D0" : "#E8C25A"));
+
     const planetSvg = customArt(planet, "cert-pl", true);
     const planetImg = await svgMarkupToImage(planetSvg, artW * 2, artH * 2);
-    const pLeft = ix + 50;
-    const pTop = iy + 160;
     ctx.drawImage(planetImg, pLeft, pTop, artW, artH);
 
-    const astH = 340;
-    const astW = astH * (200 / 280);
-    await drawAstronautOnCanvas(ctx, pLeft + 140, pTop + 300, astH, planet.photo || null);
+    const astH = 455;
+    const astSize = await drawAstronautOnCanvas(ctx, pLeft + 300, pTop + 318, astH, planet.photo || null);
 
-    const tx = ix + 600;
-    const tw = iw - 640;
+    const panelX = ix + 950;
+    const panelY = iy + 150;
+    const panelW = iw - 980;
+    const panelH = 590;
+    ctx.save();
+    ctx.shadowColor = "rgba(90, 60, 10, 0.16)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 6;
+    roundRectPath(ctx, panelX, panelY, panelW, panelH, 30);
+    ctx.fillStyle = "rgba(255, 253, 246, 0.94)";
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = "rgba(201, 150, 20, 0.7)";
+    ctx.lineWidth = 2.8;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 236, 170, 0.9)";
+    ctx.lineWidth = 1.2;
+    roundRectPath(ctx, panelX + 7, panelY + 7, panelW - 14, panelH - 14, 24);
+    ctx.stroke();
+    ctx.restore();
+
     ctx.textAlign = "left";
+    ctx.textBaseline = "top";
     ctx.fillStyle = "#1C2744";
-    ctx.font = "72px Jua, sans-serif";
-    fillWrapped(ctx, planet.name || "상상 행성", tx, iy + 168, tw, 78, 2);
+    ctx.font = "70px Jua, sans-serif";
+    const nameH = fillWrapped(ctx, planet.name || "상상 행성", panelX + 28, panelY + 22, panelW - 56, 76, 2);
 
-    ctx.font = '700 26px "Gothic A1", sans-serif';
-    ctx.fillStyle = "#6A4B00";
-    ctx.fillText("내가 만든 상상 행성", tx, iy + 330);
+    ctx.font = '700 24px "Gothic A1", sans-serif';
+    ctx.fillStyle = "#8A6520";
+    ctx.fillText("내가 만든 상상 행성", panelX + 28, panelY + 22 + nameH + 6);
 
     ctx.fillStyle = "#1C2744";
-    ctx.font = "36px Jua, sans-serif";
-    ctx.fillText("발견한 탐험가: " + explorerDisplayName(planet), tx, iy + 390);
+    ctx.font = "32px Jua, sans-serif";
+    ctx.fillText("발견한 탐험가: " + explorerDisplayName(planet), panelX + 28, panelY + 22 + nameH + 44);
+
+    ctx.strokeStyle = "rgba(212, 160, 23, 0.45)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(panelX + 28, panelY + 22 + nameH + 90);
+    ctx.lineTo(panelX + panelW - 28, panelY + 22 + nameH + 90);
+    ctx.stroke();
 
     const traits = [
-      "색깔: " + colorName(planet.color),
-      "크기: " + sizeName(planet.size),
-      "무늬: " + patternName(planet.pattern),
-      "달: " + (planet.moons ? planet.moons + "개" : "없어요"),
-      "날씨: " + stripForSpeech(tempInfo(planet.temp).card),
-      "누가 살까요: " + whoInfo(planet.who).card,
-      "가려면: " + (isTravelText(planet.travel) ? planet.travel : randomTravel())
+      ["색깔", colorName(planet.color)],
+      ["크기", sizeName(planet.size)],
+      ["무늬", patternName(planet.pattern)],
+      ["달", planet.moons ? planet.moons + "개" : "없어요"],
+      ["날씨", stripForSpeech(tempInfo(planet.temp).card)],
+      ["누가 살까요", whoInfo(planet.who).card],
+      ["가려면", isTravelText(planet.travel) ? planet.travel : randomTravel()]
     ];
-    ctx.font = '700 28px "Gothic A1", sans-serif';
-    ctx.fillStyle = "#2A3148";
-    traits.forEach((line, i) => {
-      ctx.fillText(line, tx, iy + 460 + i * 42);
+    ctx.font = '700 20px "Gothic A1", sans-serif';
+    const valueX = panelX + 28 + Math.max.apply(null, traits.map((pair) => ctx.measureText(pair[0]).width)) + 18;
+    let ty = panelY + 22 + nameH + 108;
+    traits.forEach((pair, i) => {
+      if (i) {
+        ctx.strokeStyle = "rgba(212, 160, 23, 0.22)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(panelX + 28, ty - 8);
+        ctx.lineTo(panelX + panelW - 28, ty - 8);
+        ctx.stroke();
+      }
+      ctx.font = '700 20px "Gothic A1", sans-serif';
+      ctx.fillStyle = "#8A6520";
+      ctx.fillText(pair[0], panelX + 28, ty);
+      ctx.font = '700 24px "Gothic A1", sans-serif';
+      ctx.fillStyle = "#24304A";
+      const used = fillWrapped(ctx, pair[1], valueX, ty - 1, panelX + panelW - 24 - valueX, 28, 2);
+      ty += Math.max(46, used + 18);
     });
 
+    const bannerY = H - 214;
+    ctx.save();
+    roundRectPath(ctx, ix + 70, bannerY, iw - 360, 102, 22);
+    ctx.fillStyle = "rgba(255, 248, 225, 0.95)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(212, 160, 23, 0.55)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillStyle = "#1C2744";
     ctx.font = '700 28px "Gothic A1", sans-serif';
-    const vowY = H - 210;
-    ctx.fillText("위 탐험가는 우주에서 새로운 행성을 발견하였기에", W / 2 - 40, vowY);
-    ctx.fillText("이 증서를 드립니다.", W / 2 - 40, vowY + 40);
+    ctx.fillText("위 탐험가는 우주에서 새로운 행성을 발견하였기에", ix + 70 + (iw - 320) / 2, bannerY + 34);
+    ctx.fillText("이 증서를 드립니다.", ix + 70 + (iw - 320) / 2, bannerY + 68);
 
-    ctx.textAlign = "left";
-    ctx.font = '700 24px "Gothic A1", sans-serif';
-    ctx.fillStyle = "#4A3A18";
-    ctx.fillText("발견일: " + formatKoreanDate(planet.createdAt), ix + 56, H - 130);
-    ctx.fillText("증서 번호: " + (planet.certNo || makeCertNo(planet.createdAt)), ix + 56, H - 92);
-
-    drawGoldSeal(ctx, W - 200, H - 200, 78);
+    drawGoldSeal(ctx, W - 230, H - 250, 112);
 
     let blob;
     try {
