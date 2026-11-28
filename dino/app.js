@@ -10,7 +10,8 @@
     cretaceous: { c: '#e0609a', cd: '#b02a68', bg: '#ffd6e6', g: '#fff0f6', n: '#b02a68' }
   };
   const REP = { triassic: ['coelophysis', 'plateosaurus'], jurassic: ['brachiosaurus', 'stegosaurus'], cretaceous: ['tyrannosaurus', 'triceratops'] };
-  const ANGLES = { triassic: [-80, -50], jurassic: [-15, 15], cretaceous: [50, 80] };
+  // 0° = 위, 시계 방향. 세 조각은 120°씩: 트라이아스기 왼쪽·위, 쥐라기 아래, 백악기 오른쪽·위. 경계는 0°/120°/240°.
+  const ANGLES = { triassic: [275, 328], jurassic: [148, 212], cretaceous: [32, 85] };
   const SPR = 240 / 170; // 그림 가로세로 비율
   const FEET = 156 / 170;
 
@@ -56,51 +57,68 @@
   }
 
   /* ---------- 지구 ---------- */
-  function globeMarkup(R) {
-    const bx = 100 - 100 * Math.sin(32.5 * Math.PI / 180), by = 100 - 100 * Math.cos(32.5 * Math.PI / 180);
-    const x1 = bx.toFixed(1), x2 = (200 - bx).toFixed(1), y1 = by.toFixed(1), y2 = (200 - by).toFixed(1);
-    const left = `M-30,-30 L${x1},-30 L${x1},${y1} Q${(bx - 9).toFixed(1)},100 ${x1},${y2} L${x1},230 L-30,230Z`;
-    const mid = `M${x1},-30 L${x2},-30 L${x2},${y1} Q${(200 - bx + 9).toFixed(1)},100 ${x2},${y2} L${x2},230 L${x1},230 L${x1},${y2} Q${(bx - 9).toFixed(1)},100 ${x1},${y1}Z`;
-    const right = `M${x2},-30 L230,-30 L230,230 L${x2},230 L${x2},${y2} Q${(200 - bx + 9).toFixed(1)},100 ${x2},${y1}Z`;
+  function polar(cx, cy, r, deg) {
+    const rad = deg * Math.PI / 180;
+    return [cx + r * Math.sin(rad), cy - r * Math.cos(rad)];
+  }
+  function piePath(cx, cy, r, a0, a1) {
+    const [x0, y0] = polar(cx, cy, r, a0);
+    const [x1, y1] = polar(cx, cy, r, a1);
+    return `M${cx},${cy} L${x0.toFixed(2)},${y0.toFixed(2)} A${r},${r} 0 0 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z`;
+  }
+  function globeMarkup() {
+    const tri = piePath(100, 100, 102, 240, 360);
+    const jur = piePath(100, 100, 102, 120, 240);
+    const cre = piePath(100, 100, 102, 0, 120);
+    const [t0x, t0y] = polar(100, 100, 100, 0);
+    const [t1x, t1y] = polar(100, 100, 100, 120);
+    const [t2x, t2y] = polar(100, 100, 100, 240);
     return `
     <defs>
       <radialGradient id="ocean" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#5fb7f5"/><stop offset=".6" stop-color="#2a7fd8"/><stop offset="1" stop-color="#174aa0"/></radialGradient>
       <radialGradient id="shade" cx=".36" cy=".3" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset=".75" stop-color="#001040" stop-opacity=".1"/><stop offset="1" stop-color="#001040" stop-opacity=".5"/></radialGradient>
       <radialGradient id="atmo" cx=".5" cy=".5" r=".5"><stop offset=".9" stop-color="#8fd0ff" stop-opacity=".55"/><stop offset="1" stop-color="#8fd0ff" stop-opacity="0"/></radialGradient>
       <clipPath id="cg"><circle cx="100" cy="100" r="100"/></clipPath>
-      <clipPath id="cL"><path d="${left}"/></clipPath><clipPath id="cM"><path d="${mid}"/></clipPath><clipPath id="cR"><path d="${right}"/></clipPath>
+      <clipPath id="cL"><path d="${tri}"/></clipPath>
+      <clipPath id="cM"><path d="${jur}"/></clipPath>
+      <clipPath id="cR"><path d="${cre}"/></clipPath>
     </defs>
     <circle cx="100" cy="100" r="112" fill="url(#atmo)"/>
     <g class="globe-float">
     <g clip-path="url(#cg)">
       <circle cx="100" cy="100" r="100" fill="url(#ocean)"/>
       <g clip-path="url(#cL)">
-        <path d="M-6,64 C10,40 36,34 50,50 C60,60 46,78 56,92 C62,108 44,134 30,138 C12,134 -2,110 -6,90Z" fill="#e8c27a" stroke="#c99650" stroke-width="2.4"/>
-        <path d="M14,150 C24,142 40,146 38,158 C34,168 18,166 14,150Z" fill="#e8c27a" stroke="#c99650" stroke-width="2.2"/>
-        <path d="M10,70 l12,-8 l10,6 l-4,12 l-14,2Z M26,100 l10,-6 l8,10 l-10,8Z" fill="#c9693f" opacity=".75"/>
-        <circle cx="22" cy="118" r="4" fill="#8fae55"/><circle cx="34" cy="84" r="3.5" fill="#8fae55"/><circle cx="14" cy="96" r="3" fill="#8fae55"/>
-        <rect x="-10" y="-10" width="70" height="220" fill="#ffb95e" opacity=".14"/>
+        <path d="M18,36 C40,14 72,18 86,40 C94,54 74,66 76,84 C78,104 52,118 30,112 C10,106 4,80 10,60 C12,48 12,40 18,36Z" fill="#e8c27a" stroke="#c99650" stroke-width="2.4"/>
+        <path d="M12,86 C24,74 40,80 36,96 C32,108 14,106 12,86Z" fill="#e8c27a" stroke="#c99650" stroke-width="2.2"/>
+        <path d="M28,52 l12,-8 l10,6 l-4,12 l-14,2Z M44,78 l10,-6 l8,10 l-10,8Z" fill="#c9693f" opacity=".75"/>
+        <circle cx="36" cy="96" r="4" fill="#8fae55"/><circle cx="54" cy="62" r="3.5" fill="#8fae55"/><circle cx="24" cy="70" r="3" fill="#8fae55"/>
+        <path d="${tri}" fill="#ffb95e" opacity=".16"/>
       </g>
       <g clip-path="url(#cM)">
-        <path d="M58,26 C78,16 104,24 112,42 C120,58 100,68 106,84 C112,102 100,120 86,128 C72,134 62,118 66,102 C68,86 52,74 54,56 C54,42 52,30 58,26Z" fill="#62b95a" stroke="#3f8f3f" stroke-width="2.4"/>
-        <path d="M120,138 C132,130 146,136 142,150 C136,160 120,156 120,138Z" fill="#62b95a" stroke="#3f8f3f" stroke-width="2.2"/>
-        <path d="M82,48 l8,-14 l8,14Z" fill="#8a5a4a"/><path d="M86,40 l4,-6 l4,6Z" fill="#ff7a2e"/>
-        <circle cx="76" cy="72" r="5" fill="#3f9456"/><circle cx="92" cy="96" r="4.5" fill="#3f9456"/><circle cx="82" cy="110" r="4" fill="#3f9456"/><circle cx="98" cy="62" r="4" fill="#3f9456"/>
-        <rect x="55" y="-10" width="95" height="220" fill="#2fe07a" opacity=".1"/>
+        <path d="M48,152 C58,128 78,122 100,128 C122,122 144,130 156,152 C148,182 62,184 48,160Z" fill="#62b95a" stroke="#3f8f3f" stroke-width="2.4"/>
+        <path d="M86,136 C98,126 114,132 110,146 C104,156 86,152 86,136Z" fill="#62b95a" stroke="#3f8f3f" stroke-width="2.2"/>
+        <path d="M90,150 l10,-22 l10,22Z" fill="#8a5a4a"/><path d="M96,136 l4,-7 l4,7Z" fill="#ff7a2e"/>
+        <circle cx="72" cy="156" r="5" fill="#3f9456"/><circle cx="118" cy="158" r="4.5" fill="#3f9456"/><circle cx="100" cy="166" r="4" fill="#3f9456"/><circle cx="132" cy="148" r="4" fill="#3f9456"/>
+        <path d="${jur}" fill="#2fe07a" opacity=".12"/>
       </g>
       <g clip-path="url(#cR)">
-        <path d="M120,42 C142,30 170,44 176,66 C180,84 166,92 162,108 C158,124 140,132 128,122 C118,112 130,98 124,84 C118,70 112,54 120,42Z" fill="#7bc77a" stroke="#4a9a4a" stroke-width="2.4"/>
+        <path d="M122,28 C148,14 176,28 184,54 C188,74 172,86 168,106 C162,126 142,130 130,116 C120,104 132,90 126,74 C120,56 114,40 122,28Z" fill="#7bc77a" stroke="#4a9a4a" stroke-width="2.4"/>
         <path d="M148,50 q-14,22 6,36 q14,12 -2,34" stroke="#6cc4f0" stroke-width="5" fill="none" stroke-linecap="round"/>
-        <circle cx="136" cy="64" r="4" fill="#ff8fb3"/><circle cx="160" cy="76" r="4" fill="#ff8fb3"/><circle cx="144" cy="104" r="4" fill="#ffd54a"/><circle cx="158" cy="94" r="3.5" fill="#fff"/><circle cx="130" cy="86" r="3.5" fill="#ffc1d6"/>
-        <rect x="150" y="-10" width="100" height="220" fill="#ff7aa8" opacity=".1"/>
+        <circle cx="136" cy="54" r="4" fill="#ff8fb3"/><circle cx="160" cy="66" r="4" fill="#ff8fb3"/><circle cx="146" cy="96" r="4" fill="#ffd54a"/><circle cx="168" cy="88" r="3.5" fill="#fff"/><circle cx="132" cy="78" r="3.5" fill="#ffc1d6"/>
+        <path d="${cre}" fill="#ff7aa8" opacity=".12"/>
       </g>
       <g class="gcloud" fill="#fff" opacity=".6"><ellipse cx="60" cy="38" rx="26" ry="5.5"/><ellipse cx="128" cy="150" rx="30" ry="6"/><ellipse cx="40" cy="132" rx="20" ry="5"/><ellipse cx="150" cy="30" rx="22" ry="5"/></g>
-      <path d="${`M${x1},${y1} Q${(bx - 9).toFixed(1)},100 ${x1},${y2}`}" stroke="#fff" stroke-width="2.6" stroke-dasharray="1 7" stroke-linecap="round" fill="none" opacity=".95"/>
-      <path d="${`M${x2},${y1} Q${(200 - bx + 9).toFixed(1)},100 ${x2},${y2}`}" stroke="#fff" stroke-width="2.6" stroke-dasharray="1 7" stroke-linecap="round" fill="none" opacity=".95"/>
       <circle cx="100" cy="100" r="100" fill="url(#shade)" pointer-events="none"/>
-      <g clip-path="url(#cg)">
-        <path class="band" data-era="triassic" d="${left}"/><path class="band" data-era="jurassic" d="${mid}"/><path class="band" data-era="cretaceous" d="${right}"/>
-      </g>
+      <path class="band" data-era="triassic" d="${tri}"/>
+      <path class="band" data-era="jurassic" d="${jur}"/>
+      <path class="band" data-era="cretaceous" d="${cre}"/>
+    </g>
+    <g class="seams" pointer-events="none">
+      <line x1="100" y1="100" x2="${t0x.toFixed(2)}" y2="${t0y.toFixed(2)}"/>
+      <line x1="100" y1="100" x2="${t1x.toFixed(2)}" y2="${t1y.toFixed(2)}"/>
+      <line x1="100" y1="100" x2="${t2x.toFixed(2)}" y2="${t2y.toFixed(2)}"/>
+      <circle cx="100" cy="100" r="5.2" fill="#eef8ff" stroke="#7eb7e8" stroke-width="1.6"/>
+      <circle cx="100" cy="100" r="2.2" fill="#7eb7e8"/>
     </g>
     <circle cx="100" cy="100" r="100" fill="none" stroke="#bfe3ff" stroke-width="1.6" opacity=".6" pointer-events="none"/>
     </g>`;
@@ -111,18 +129,64 @@
     const portrait = H > W;
     const topH = Math.max(52, Math.min(72, H * 0.085));
     app.style.setProperty('--topH', topH + 'px');
-    const sw = Math.max(96, Math.min(portrait ? 190 : 165, Math.min(W, H) * 0.26));
+    const sw = Math.max(84, Math.min(portrait ? 180 : 136, Math.min(W, H) * (portrait ? 0.24 : 0.20)));
     const sh = sw / SPR;
-    const bottom = 12;
-    let R = Math.min((W - 2 * (sh * 1.12 + 8)) / 2, (H - topH - sh - 6) / 2 * (portrait ? 1 : 1.1));
-    R = Math.floor(R);
-    const cy = portrait ? Math.max(topH + sh + R + 4, (topH + H) / 2) : topH + sh + R + 4;
-    const cx = W / 2;
+    const angs = ERAS.flatMap(e => ANGLES[e.id]);
+    const dinoAABB = (R, cx, cy) => {
+      let minX = cx - R * 1.14, maxX = cx + R * 1.14, minY = cy - R * 1.14, maxY = cy + R * 1.14;
+      ERAS.forEach(era => {
+        REP[era.id].forEach((id, k) => {
+          const phi = ANGLES[era.id][k], rad = phi * Math.PI / 180;
+          const d = DINOS[id];
+          const w = sw * Math.min(1.08, d.sc), hh = w / SPR;
+          const amp = w * 0.05;
+          const px = cx + R * Math.sin(rad), py = cy - R * Math.cos(rad);
+          const left = px - w / 2, top = py - hh * FEET + hh * 0.07;
+          const ox = px, oy = top + hh * FEET;
+          const c = Math.cos(rad), s = Math.sin(rad);
+          const corners = [
+            [left - amp, top], [left + w + amp, top],
+            [left - amp, top + hh], [left + w + amp, top + hh]
+          ];
+          corners.forEach(([x, y]) => {
+            const dx = x - ox, dy = y - oy;
+            const rx = ox + dx * c - dy * s, ry = oy + dx * s + dy * c;
+            if (rx < minX) minX = rx; if (rx > maxX) maxX = rx;
+            if (ry < minY) minY = ry; if (ry > maxY) maxY = ry;
+          });
+        });
+      });
+      return { minX, maxX, minY, maxY, ok: minX >= 6 && maxX <= W - 6 && minY >= topH && maxY <= H - 6 };
+    };
+    // cx,cy will be recentered; first search R assuming centered then re-check
+    let lo = 70, hi = Math.floor(Math.min(W, H) / 2), bestR = lo;
+    const tryR = (R) => {
+      // provisional center
+      const cx = W / 2, cy = topH + (H - topH) / 2;
+      const box = dinoAABB(R, cx, cy);
+      const bw = box.maxX - box.minX, bh = box.maxY - box.minY;
+      if (bw > W - 12 || bh > H - topH - 6) return { ok: false, box, cx, cy };
+      const ncx = 6 - box.minX + cx + (W - 12 - bw) / 2;
+      const ncy = topH - box.minY + cy + (H - topH - 6 - bh) / 2;
+      const box2 = dinoAABB(R, ncx, ncy);
+      return { ok: box2.ok, box: box2, cx: ncx, cy: ncy };
+    };
+    let best = tryR(lo);
+    for (let i = 0; i < 20; i++) {
+      const mid = (lo + hi) / 2, f = tryR(mid);
+      if (f.ok) { bestR = mid; best = f; lo = mid; } else hi = mid;
+    }
+    const R = Math.floor(bestR);
+    const placed = tryR(R);
+    const cx = placed.cx, cy = placed.cy;
     const g = $('globe');
-    g.setAttribute('viewBox', '0 0 200 200');
-    g.style.left = (cx - R) + 'px'; g.style.top = (cy - R) + 'px'; g.style.width = 2 * R + 'px'; g.style.height = 2 * R + 'px';
-    g.innerHTML = globeMarkup(R);
-    // 공룡
+    const boxS = 1.14;
+    g.setAttribute('viewBox', '-14 -14 228 228');
+    g.style.left = (cx - boxS * R) + 'px';
+    g.style.top = (cy - boxS * R) + 'px';
+    g.style.width = (2 * boxS * R) + 'px';
+    g.style.height = (2 * boxS * R) + 'px';
+    g.innerHTML = globeMarkup();
     let h = '';
     ERAS.forEach(era => {
       REP[era.id].forEach((id, k) => {
@@ -136,15 +200,19 @@
       });
     });
     $('homeDinos').innerHTML = h;
-    // 시대 이름표
-    const fs = Math.round(R * 0.108);
-    const pos = { triassic: [-0.57, 0.14], jurassic: [0, 0.58], cretaceous: [0.57, 0.14] };
-    let p = '';
+    const fs = Math.round(Math.max(15, Math.min(26, R * 0.105)));
+    const along = 0.40;
+    const pos = {
+      triassic: [along * Math.sin(300 * Math.PI / 180), -along * Math.cos(300 * Math.PI / 180)],
+      jurassic: [along * Math.sin(180 * Math.PI / 180), -along * Math.cos(180 * Math.PI / 180)],
+      cretaceous: [along * Math.sin(60 * Math.PI / 180), -along * Math.cos(60 * Math.PI / 180)]
+    };
+    let phtml = '';
     ERAS.forEach(e => {
       const st = ERA_STYLE[e.id];
-      p += `<button type="button" class="pill" data-era="${e.id}" style="left:${(cx + pos[e.id][0] * R).toFixed(1)}px;top:${(cy + pos[e.id][1] * R).toFixed(1)}px;font-size:${fs}px;--c:${st.c};--cd:${st.cd}"><b>${e.name}</b><small>${e.time}</small></button>`;
+      phtml += `<button type="button" class="pill" data-era="${e.id}" style="left:${(cx + pos[e.id][0] * R).toFixed(1)}px;top:${(cy + pos[e.id][1] * R).toFixed(1)}px;font-size:${fs}px;--c:${st.c};--cd:${st.cd}"><b>${e.name}</b><small>${e.time}</small></button>`;
     });
-    $('homePills').innerHTML = p;
+    $('homePills').innerHTML = phtml;
     $('homePills').style.pointerEvents = 'none';
     updateStamps();
   }
