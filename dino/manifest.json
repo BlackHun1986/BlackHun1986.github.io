@@ -1,0 +1,17 @@
+{
+  "name": "공룡 탐험",
+  "short_name": "공룡 탐험",
+  "description": "6살을 위한 공룡 시대 탐험! 지구에서 공룡 시대로 떠나요.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0F2152",
+  "theme_color": "#0E1B3D",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

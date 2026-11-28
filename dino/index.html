@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0E1B3D">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="공룡 탐험">
+  <meta name="description" content="6살을 위한 공룡 시대 탐험! 지구에서 공룡 시대로 떠나요.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>공룡 탐험</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 첫 화면: 지구 -->
+    <section id="home" class="screen">
+      <div class="stars" aria-hidden="true"></div>
+      <header class="topbar">
+        <h1 class="display">🦖 공룡 탐험</h1>
+        <p class="hint" id="homeHint">지구를 눌러서 공룡 시대로 가요!</p>
+        <div class="top-actions">
+          <span class="chip" id="stampChip" aria-label="만난 공룡">⭐ <b id="stampCount">0/30</b></span>
+          <button type="button" class="chip gold" id="btnQuiz">퀴즈</button>
+        </div>
+      </header>
+      <svg id="globe" aria-label="지구" role="img"></svg>
+      <div id="homeDinos"></div>
+      <div id="homePills"></div>
+    </section>
+
+    <!-- 시대 화면 -->
+    <section id="scene" class="screen" hidden>
+      <div id="sceneBg" aria-hidden="true"></div>
+      <div id="creatures"></div>
+      <div id="sceneFg" aria-hidden="true"></div>
+      <header class="scene-top">
+        <button type="button" class="back" id="btnBack" aria-label="지구로 돌아가기">🌍 <span>지구</span></button>
+        <h2 class="display scene-title" id="sceneTitle"></h2>
+        <span class="chip" id="sceneStamp"></span>
+      </header>
+    </section>
+
+    <!-- 공룡 카드 -->
+    <div id="card" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="cName">
+      <div class="card" id="cardBox">
+        <button type="button" class="x" id="cardClose" aria-label="닫기">✕</button>
+        <div class="c-left">
+          <div class="c-art" id="cArt"></div>
+          <div class="c-btns">
+            <button type="button" class="round" id="btnPrev" aria-label="앞 친구">◀</button>
+            <button type="button" class="speak" id="btnSpeak">🔊 읽어 줘</button>
+            <button type="button" class="round" id="btnNext" aria-label="다음 친구">▶</button>
+          </div>
+        </div>
+        <div class="c-right" id="cText">
+          <div class="c-head">
+            <h2 class="display" id="cName"></h2>
+            <div class="chips" id="cChips"></div>
+          </div>
+          <ul class="facts" id="cFacts"></ul>
+          <div class="secret"><strong>쉿! 나만 아는 비밀</strong><span id="cSecret"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 퀴즈 -->
+    <div id="quiz" class="overlay" hidden role="dialog" aria-modal="true">
+      <div class="card quiz-card">
+        <button type="button" class="x" id="quizClose" aria-label="닫기">✕</button>
+        <div class="q-top"><span class="q-step" id="qStep"></span><button type="button" class="speak sm" id="btnQSpeak">🔊 읽어 줘</button></div>
+        <h2 class="q-text display" id="qText"></h2>
+        <div class="q-opts" id="qOpts"></div>
+        <p class="q-msg" id="qMsg" aria-live="polite"></p>
+        <button type="button" class="speak next" id="qNext" hidden>다음 ▶</button>
+      </div>
+    </div>
+    <div id="rotateNote" hidden></div>
+  </div>
+  <script src="data.js"></script>
+  <script src="art.js"></script>
+  <script src="scenes.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
