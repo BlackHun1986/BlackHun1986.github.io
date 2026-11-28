@@ -1461,10 +1461,10 @@
     }
   }
 
-  const ASTRO_VB_W = 533;
-  const ASTRO_VB_H = 1084;
-  const ASTRO_VISOR = { cx: 282.5, cy: 137.38, rx: 85, ry: 82.18, r: 83.59, rotation: 2.7811 };
-  const ASTRO_TIGHT = { x: 16, y: 16, w: 501, h: 1052 };
+  const ASTRO_VB_W = 604;
+  const ASTRO_VB_H = 1023;
+  const ASTRO_VISOR = { cx: 319.09, cy: 222.11, rx: 165.58, ry: 139.2, r: 152.39, rotation: 3.1329 };
+  const ASTRO_TIGHT = { x: 16, y: 16, w: 572, h: 990 };
   const ASTRO_SRC_WEBP = "assets/astronaut.webp";
   const ASTRO_SRC_PNG = "assets/astronaut.png";
   const CERT_GAP = 36;
@@ -1981,8 +1981,8 @@
       ctx.beginPath();
       ctx.ellipse(0, 0, rx, ry, 0, fromA, toA, false);
       ctx.stroke();
-      ctx.strokeStyle = "#4AD4F0";
-      ctx.lineWidth = Math.max(2, r * 0.035);
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = Math.max(1.6, r * 0.028);
       ctx.beginPath();
       ctx.ellipse(0, 0, rx, ry, 0, fromA, toA, false);
       ctx.stroke();
@@ -2043,13 +2043,13 @@
         ctx.rotate(tang);
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
-        ctx.strokeStyle = "#FFFDF4";
+        ctx.strokeStyle = "#0A1638";
+        ctx.lineWidth = Math.max(6, fontPx * 0.28);
+        ctx.strokeText(ch, 0, 0);
+        ctx.strokeStyle = "#071022";
         ctx.lineWidth = Math.max(4, fontPx * 0.18);
         ctx.strokeText(ch, 0, 0);
-        ctx.strokeStyle = "#0E1A3A";
-        ctx.lineWidth = Math.max(3, fontPx * 0.12);
-        ctx.strokeText(ch, 0, 0);
-        ctx.fillStyle = "#0E1A3A";
+        ctx.fillStyle = "#FFD54A";
         ctx.fillText(ch, 0, 0);
         ctx.restore();
         pos += wch;
@@ -2099,14 +2099,9 @@
     drawTextOnRing("우주 탐험대");
 
     ctx.beginPath();
-    ctx.arc(0, 0, r, 0, Math.PI * 2);
-    ctx.strokeStyle = "#4AD4F0";
-    ctx.lineWidth = r * 0.13;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(0, 0, r - r * 0.055, 0, Math.PI * 2);
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = r * 0.035;
+    ctx.arc(0, 0, r - r * 0.015, 0, Math.PI * 2);
+    ctx.strokeStyle = "#E8C25A";
+    ctx.lineWidth = Math.max(2, r * 0.04);
     ctx.stroke();
 
     ctx.restore();

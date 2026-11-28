@@ -1101,7 +1101,7 @@ body.paused .c-moon-orbit {
   display: block;
   width: auto;
   height: 200px;
-  aspect-ratio: 533 / 1084;
+  aspect-ratio: 604 / 1023;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.22));
 }
 .builder .astronaut-art { height: 210px; width: auto; }
