@@ -919,8 +919,19 @@ body.paused .c-moon-orbit {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
+  min-height: 0;
+  overflow: auto;
 }
+.builder-opts-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  gap: 8px;
+}
+.builder-opts-col .travel-block { margin-top: 0; flex-shrink: 0; }
+.builder-opts-col .travel-row { justify-content: flex-start; }
+
 .preview-wrap {
   width: min(200px, 42vw);
   height: min(140px, 22vh);
@@ -1077,3 +1088,121 @@ body.paused .c-moon-orbit {
 }
 
 .builder:not(.is-editing) #btn-delete-planet { display: none !important; }
+
+/* ---------- astronaut + travel + certificate ---------- */
+.astronaut-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto 4px;
+}
+.astronaut-art {
+  display: block;
+  width: 112px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.22));
+}
+.builder .astronaut-art { width: 100px; }
+.card .astronaut-art { width: 118px; }
+.explorer-input { max-width: 240px; font-size: 18px; min-height: 44px; }
+.travel-block { width: 100%; text-align: center; margin-top: 6px; }
+.travel-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.travel-text {
+  font-family: "Jua", sans-serif;
+  font-size: 16px;
+  color: #2C4C9A;
+  background: #EAF2FF;
+  border-radius: 12px;
+  padding: 8px 12px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+#btn-reroll-travel::before { content: "🎲 "; }
+
+.btn-cert {
+  background: linear-gradient(180deg, #FFEAA0, #FFC44D);
+  color: #3A2A00;
+  box-shadow: 0 4px 0 #D4A017;
+  flex: 1 0 100%;
+}
+.card-actions { flex-wrap: wrap; }
+.card-actions-custom { margin-top: 12px; }
+.card-actions-custom[hidden] { display: none !important; }
+
+.cert-box {
+  width: min(920px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  color: var(--card-ink);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  padding: 16px 16px 14px;
+  animation: pop 0.32s ease;
+}
+.cert-box h2 { margin: 0 0 8px; text-align: center; font-size: clamp(22px, 4vmin, 34px); }
+.cert-preview-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  background: #1a1630;
+  border-radius: 16px;
+  padding: 8px;
+}
+.cert-preview-wrap img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: min(62vh, 720px);
+  border-radius: 8px;
+  background: #F7F0DC;
+}
+.cert-hint {
+  margin: 10px 0 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: #6A4B00;
+  background: #FFF3C4;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+.cert-hint[hidden] { display: none !important; }
+
+@media (orientation: landscape) {
+  .card .astronaut-art { width: 100px; }
+  .builder .astronaut-art { width: 86px; }
+  .cert-preview-wrap img { max-height: min(58vh, 560px); }
+  .builder .card-actions .btn-cert { flex: 1 1 100%; }
+  .btn { font-size: 20px; }
+}
+
+.card.is-custom .card-hero {
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (orientation: landscape) {
+  .card-actions-custom { grid-column: 1 / -1; }
+}
+
+@media (min-width: 680px) {
+  .builder-grid {
+    grid-template-columns: minmax(200px, 260px) 1fr;
+    overflow: hidden;
+  }
+  .builder-preview-col { overflow: auto; max-height: 100%; }
+  .builder-opts-col { min-height: 0; }
+}

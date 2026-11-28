@@ -53,10 +53,8 @@
       <div class="card-hero">
         <div class="planet-art" id="card-art" aria-hidden="true"></div>
         <div class="explorer" id="card-explorer" hidden>
-          <div class="astro-frame">
-            <img id="card-photo" alt="행성을 만든 탐험가">
-          </div>
-          <p>행성을 만든 탐험가</p>
+          <div class="astronaut-wrap" id="card-astronaut"></div>
+          <p id="card-explorer-label">행성을 만든 탐험가</p>
         </div>
       </div>
       <div class="card-copy">
@@ -66,6 +64,9 @@
         <ul class="facts" id="card-facts"></ul>
         <div class="fun" id="card-fun"></div>
         <div class="meta" id="card-meta"></div>
+      </div>
+      <div class="card-actions card-actions-custom" id="card-custom-actions" hidden>
+        <button type="button" class="btn btn-cert" id="btn-card-cert">발견 증서 저장</button>
       </div>
       <div class="card-actions">
         <button type="button" class="btn btn-speak" id="btn-speak">🔊 읽어 줘</button>
@@ -132,9 +133,11 @@
           </div>
           <div class="photo-block">
             <p class="opt-label">행성을 만든 탐험가</p>
-            <div class="astro-frame" id="photo-frame">
-              <img id="photo-preview" alt="" hidden>
-              <span class="photo-placeholder" id="photo-placeholder">🙂</span>
+            <div class="astronaut-wrap" id="builder-astronaut"></div>
+            <label class="opt-label" for="explorer-name">탐험가 이름</label>
+            <input type="text" id="explorer-name" class="name-input explorer-input" maxlength="12" placeholder="탐험가 이름" autocomplete="off" enterkeyhint="done">
+            <div class="name-btns">
+              <button type="button" class="mini" id="btn-preset-explorer">우주 탐험가</button>
             </div>
             <input id="planet-photo-input" type="file" accept="image/*" capture="user" hidden>
             <div class="photo-actions">
@@ -143,10 +146,20 @@
             </div>
           </div>
         </div>
-        <div class="builder-opts" id="builder-opts"></div>
+        <div class="builder-opts-col">
+          <div class="travel-block">
+            <p class="opt-label">우주선으로 가려면</p>
+            <div class="travel-row">
+              <span id="travel-preview" class="travel-text"></span>
+              <button type="button" class="mini" id="btn-reroll-travel">다시 뽑기</button>
+            </div>
+          </div>
+          <div class="builder-opts" id="builder-opts"></div>
+        </div>
       </div>
       <p class="builder-msg" id="builder-msg" hidden></p>
       <div class="card-actions">
+        <button type="button" class="btn btn-cert" id="btn-builder-cert">발견 증서 저장</button>
         <button type="button" class="btn btn-speak" id="btn-save-planet">저장</button>
         <button type="button" class="btn btn-danger" id="btn-delete-planet" hidden>삭제</button>
         <button type="button" class="btn btn-close" id="btn-builder-close">닫기</button>
@@ -160,6 +173,20 @@
       <div class="card-actions">
         <button type="button" class="btn btn-danger" id="confirm-ok">지울게요</button>
         <button type="button" class="btn btn-close" id="confirm-cancel">아니요</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="cert-overlay" hidden>
+    <div class="cert-box" role="dialog" aria-modal="true" aria-labelledby="cert-title">
+      <h2 class="display" id="cert-title">새로운 행성 발견 증서</h2>
+      <div class="cert-preview-wrap">
+        <img id="cert-preview-img" alt="새로운 행성 발견 증서">
+      </div>
+      <p class="cert-hint" id="cert-hint" hidden>이미지를 길게 눌러서 저장하세요</p>
+      <div class="card-actions">
+        <button type="button" class="btn btn-cert" id="btn-cert-download">이미지 저장</button>
+        <button type="button" class="btn btn-close" id="btn-cert-close">닫기</button>
       </div>
     </div>
   </div>

@@ -6,7 +6,7 @@
   const STORAGE_CUSTOM = "kids-space-custom-planets";
   const TOTAL = 12;
   const MAX_CUSTOM = 6;
-  const OVERLAYS = ["card-overlay", "album-overlay", "quiz-overlay", "intro-overlay", "builder-overlay", "confirm-overlay"];
+  const OVERLAYS = ["card-overlay", "album-overlay", "quiz-overlay", "intro-overlay", "builder-overlay", "confirm-overlay", "cert-overlay"];
 
   const BODIES = {
     galaxy: {
@@ -518,15 +518,20 @@
     $("card-fun").innerHTML = `<strong>알고 봤니?</strong> ${escapeHtml(b.fun)}`;
     $("card-meta").innerHTML = `
       <div class="meta-item"><span class="label">${escapeHtml(b.tempLabel)}</span>${escapeHtml(b.temp)}</div>
-      <div class="meta-item"><span class="label">${custom ? "가는 법" : "가려면"}</span>${escapeHtml(b.travel)}</div>`;
+      <div class="meta-item"><span class="label">가려면</span>${escapeHtml(b.travel)}</div>`;
     const explorer = $("card-explorer");
-    const photo = $("card-photo");
-    if (custom && b.photo) {
-      photo.src = b.photo;
+    const astro = $("card-astronaut");
+    const customActions = $("card-custom-actions");
+    if (custom) {
+      mountAstronaut(astro, b.photo, "card");
+      const label = $("card-explorer-label");
+      if (label) label.textContent = b.explorerName || "행성을 만든 탐험가";
       explorer.hidden = false;
+      if (customActions) customActions.hidden = false;
     } else {
-      photo.removeAttribute("src");
+      if (astro) astro.innerHTML = "";
       explorer.hidden = true;
+      if (customActions) customActions.hidden = true;
     }
     $("btn-edit-planet").hidden = !custom;
     $("btn-speak").textContent = "🔊 읽어 줘";
@@ -556,7 +561,8 @@
       ...b.facts,
       `알고 봤니? ${b.fun}`,
       `${b.tempLabel}: ${b.temp}`,
-      b.travel ? `가려면, ${b.travel}` : ""
+      b.travel ? `가려면, ${b.travel}` : "",
+      b.custom && b.explorerName ? `발견한 탐험가는 ${b.explorerName}예요.` : ""
     ];
     return stripForSpeech(parts.join(" "));
   }
@@ -826,7 +832,13 @@
       face: FACES.some((f) => f.id === p.face) ? p.face : "smile",
       temp: TEMPS.some((x) => x.id === p.temp) ? p.temp : "warm",
       who: WHOS.some((x) => x.id === p.who) ? p.who : "kids",
-      photo: typeof p.photo === "string" && p.photo.startsWith("data:image/") ? p.photo : null
+      photo: typeof p.photo === "string" && p.photo.startsWith("data:image/") ? p.photo : null,
+      explorerName: String(p.explorerName || "").trim().slice(0, 12),
+      travel: isTravelText(p.travel) ? p.travel.trim() : randomTravel(),
+      createdAt: (typeof p.createdAt === "string" && !Number.isNaN(new Date(p.createdAt).getTime()))
+        ? p.createdAt
+        : new Date().toISOString(),
+      certNo: typeof p.certNo === "string" && p.certNo.trim() ? String(p.certNo).trim().slice(0, 32) : makeCertNo(p.createdAt)
     };
   }
 
@@ -863,6 +875,12 @@
     el.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
+  }
+  function hideToast() {
+    const el = $("toast");
+    if (!el) return;
+    el.hidden = true;
+    clearTimeout(toastTimer);
   }
 
   function colorName(hex) {
@@ -1041,9 +1059,10 @@
       fun: `${facePart} ${w.card}`,
       tempLabel: "날씨",
       temp: t.card,
-      travel: "상상의 로켓을 타면, 눈 깜짝할 사이에 갈 수 있어요!",
+      travel: travelSentence(p.travel),
       custom: true,
       photo: p.photo,
+      explorerName: p.explorerName || "",
       _raw: p
     };
   }
@@ -1071,7 +1090,11 @@
       face: "smile",
       temp: "warm",
       who: "kids",
-      photo: null
+      photo: null,
+      explorerName: "",
+      travel: randomTravel(),
+      createdAt: new Date().toISOString(),
+      certNo: ""
     };
   }
 
@@ -1154,23 +1177,12 @@
   }
 
   function updatePhotoUI() {
-    const img = $("photo-preview");
-    const ph = $("photo-placeholder");
+    if (!draft) return;
+    mountAstronaut($("builder-astronaut"), draft.photo, "builder");
     const clear = $("btn-clear-photo");
     const take = $("btn-take-photo");
-    if (draft.photo) {
-      img.src = draft.photo;
-      img.hidden = false;
-      ph.hidden = true;
-      clear.hidden = false;
-      take.textContent = "다시 찍기";
-    } else {
-      img.removeAttribute("src");
-      img.hidden = true;
-      ph.hidden = false;
-      clear.hidden = true;
-      take.textContent = "사진 찍기";
-    }
+    if (clear) clear.hidden = !draft.photo;
+    if (take) take.textContent = draft.photo ? "다시 찍기" : "사진 찍기";
   }
 
   function setBuilderMsg(msg) {
@@ -1184,6 +1196,9 @@
     draft = existing ? { ...existing } : emptyDraft();
     $("builder-title").textContent = existing ? "상상 행성 바꾸기" : "나만의 행성 만들기";
     $("planet-name").value = draft.name;
+    $("explorer-name").value = draft.explorerName || "";
+    if (!isTravelText(draft.travel)) draft.travel = randomTravel();
+    updateTravelUI();
     $("btn-delete-planet").hidden = !existing;
     $("btn-delete-planet").setAttribute("hidden", "");
     if (existing) $("btn-delete-planet").removeAttribute("hidden");
@@ -1208,11 +1223,16 @@
     let name = ($("planet-name").value || "").trim().slice(0, 16);
     if (!name) name = randomPlanetName();
     draft.name = name;
+    draft.explorerName = readExplorerName();
+    if (!isTravelText(draft.travel)) draft.travel = randomTravel();
+    if (!draft.createdAt) draft.createdAt = new Date().toISOString();
+    if (!draft.certNo) draft.certNo = makeCertNo(draft.createdAt);
     $("planet-name").value = name;
     const planet = normalizeCustom({
       ...draft,
       id: draft.id || "custom-" + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36),
-      name
+      name,
+      explorerName: draft.explorerName
     });
     const list = customs.slice();
     const idx = list.findIndex((p) => p.id === planet.id);
@@ -1373,6 +1393,515 @@
     }
   }
 
+
+  function isTravelText(s) {
+    return typeof s === "string" && /^우주선으로\s+\d+(일|개월|년)/.test(s.trim());
+  }
+
+  function formatTravelParts(years, months, days) {
+    const parts = [];
+    if (years > 0) parts.push(years + "년");
+    if (months > 0) parts.push(months + "개월");
+    if (days > 0) parts.push(days + "일");
+    if (!parts.length) parts.push("3일");
+    return "우주선으로 " + parts.join(" ");
+  }
+
+  function randomTravel() {
+    const r = Math.random();
+    if (r < 0.2) {
+      return formatTravelParts(0, 0, 3 + Math.floor(Math.random() * 28));
+    }
+    if (r < 0.4) {
+      return formatTravelParts(0, 1 + Math.floor(Math.random() * 11), 0);
+    }
+    if (r < 0.88) {
+      const years = 1 + Math.floor(Math.random() * 20);
+      const months = Math.random() < 0.55 ? 1 + Math.floor(Math.random() * 11) : 0;
+      return formatTravelParts(years, months, 0);
+    }
+    const years = 21 + Math.floor(Math.random() * 30);
+    const months = years >= 50 || Math.random() >= 0.4 ? 0 : 1 + Math.floor(Math.random() * 11);
+    return formatTravelParts(Math.min(50, years), months, 0);
+  }
+
+  function travelSentence(text) {
+    const t = String(text || "").trim();
+    if (!t) return "우주선으로 며칠이 걸려요.";
+    if (/걸려요\.?$/.test(t)) return t;
+    return t + "이 걸려요.";
+  }
+
+  function makeCertNo(date) {
+    const d = date instanceof Date ? date : new Date(date || Date.now());
+    const safe = Number.isNaN(d.getTime()) ? new Date() : d;
+    const y = safe.getFullYear();
+    const m = String(safe.getMonth() + 1).padStart(2, "0");
+    const day = String(safe.getDate()).padStart(2, "0");
+    const n = String(1000 + Math.floor(Math.random() * 9000));
+    return "제 " + y + m + day + "-" + n + "호";
+  }
+
+  function formatKoreanDate(iso) {
+    const d = iso ? new Date(iso) : new Date();
+    const safe = Number.isNaN(d.getTime()) ? new Date() : d;
+    return safe.getFullYear() + "년 " + (safe.getMonth() + 1) + "월 " + safe.getDate() + "일";
+  }
+
+  function persistGeneratedCustomFields() {
+    if (!customs.length) return;
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_CUSTOM) || "[]");
+      const missing = (p) => !p || !isTravelText(p.travel) || !p.createdAt || !p.certNo;
+      if (!Array.isArray(raw) || raw.some(missing) || raw.length !== customs.length) {
+        persistCustoms(customs);
+      }
+    } catch {
+      persistCustoms(customs);
+    }
+  }
+
+  function defaultFaceSvg() {
+    return `<circle cx="100" cy="90" r="44" fill="#F8C9A8"/>
+      <path d="M58 78 Q100 42 142 78 Q128 70 100 68 Q72 70 58 78Z" fill="#5A3A28"/>
+      <ellipse cx="86" cy="86" rx="5.2" ry="6.2" fill="#2A1A10"/>
+      <ellipse cx="114" cy="86" rx="5.2" ry="6.2" fill="#2A1A10"/>
+      <circle cx="88" cy="84" r="1.7" fill="#fff"/>
+      <circle cx="116" cy="84" r="1.7" fill="#fff"/>
+      <ellipse cx="78" cy="98" rx="7" ry="4" fill="#F5A0A0" opacity=".55"/>
+      <ellipse cx="122" cy="98" rx="7" ry="4" fill="#F5A0A0" opacity=".55"/>
+      <path d="M90 110 Q100 118 110 110" fill="none" stroke="#C06A6A" stroke-width="2.6" stroke-linecap="round"/>`;
+  }
+
+  function astronautSVG(photo, suffix, opts) {
+    const x = "ast-" + (suffix || "a");
+    const skipPhoto = opts && opts.forCanvas;
+    const face = !skipPhoto && photo
+      ? `<image href="${photo}" x="58" y="44" width="84" height="84" preserveAspectRatio="xMidYMid slice"/>`
+      : defaultFaceSvg();
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" class="astronaut-art" width="200" height="280" aria-hidden="true">
+      <defs>
+        <linearGradient id="suit${x}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="55%" stop-color="#E8EEF8"/>
+          <stop offset="100%" stop-color="#C5D0E8"/>
+        </linearGradient>
+        <linearGradient id="pack${x}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6E86D4"/>
+          <stop offset="100%" stop-color="#3E56A8"/>
+        </linearGradient>
+        <clipPath id="visor-clip-${x}"><circle cx="100" cy="86" r="42"/></clipPath>
+      </defs>
+      <rect x="58" y="132" width="84" height="92" rx="18" fill="url(#pack${x})"/>
+      <rect x="68" y="142" width="64" height="14" rx="6" fill="#8AA0E0"/>
+      <circle cx="128" cy="180" r="8" fill="#FFC44D"/>
+      <circle cx="128" cy="180" r="3.5" fill="#FFF3C4"/>
+      <rect x="66" y="214" width="28" height="50" rx="12" fill="url(#suit${x})"/>
+      <rect x="106" y="214" width="28" height="50" rx="12" fill="url(#suit${x})"/>
+      <ellipse cx="80" cy="262" rx="18" ry="9" fill="#D4DEEF"/>
+      <ellipse cx="120" cy="262" rx="18" ry="9" fill="#D4DEEF"/>
+      <rect x="40" y="138" width="26" height="60" rx="13" fill="url(#suit${x})" transform="rotate(10 53 168)"/>
+      <rect x="134" y="138" width="26" height="60" rx="13" fill="url(#suit${x})" transform="rotate(-10 147 168)"/>
+      <circle cx="46" cy="202" r="13" fill="#E8EEF8" stroke="#B8C4DC" stroke-width="2"/>
+      <circle cx="154" cy="202" r="13" fill="#E8EEF8" stroke="#B8C4DC" stroke-width="2"/>
+      <rect x="62" y="132" width="76" height="90" rx="24" fill="url(#suit${x})" stroke="#C9D4EE" stroke-width="3"/>
+      <rect x="88" y="162" width="28" height="24" rx="6" fill="#2C4C9A"/>
+      <circle cx="96" cy="174" r="3.6" fill="#3DDC97"/>
+      <circle cx="108" cy="174" r="3.6" fill="#FF8A3D"/>
+      <circle cx="76" cy="170" r="13" fill="#FFF8E8" stroke="#D4A017" stroke-width="2"/>
+      <circle cx="76" cy="170" r="9.5" fill="#2C4C9A"/>
+      <polygon points="76,162 78,168 84,168 79,172 81,178 76,174 71,178 73,172 68,168 74,168" fill="#FFD56A"/>
+      <ellipse cx="100" cy="128" rx="34" ry="11" fill="#C5D0E8"/>
+      <circle cx="100" cy="86" r="60" fill="#F4F7FF" stroke="#B8C4DC" stroke-width="6"/>
+      <circle cx="100" cy="86" r="54" fill="none" stroke="#EEF3FA" stroke-width="3"/>
+      <circle cx="100" cy="86" r="47" fill="#1A2744"/>
+      <g clip-path="url(#visor-clip-${x})">${face}</g>
+      <ellipse cx="82" cy="70" rx="16" ry="10" fill="#fff" opacity=".45"/>
+      <ellipse cx="118" cy="78" rx="8" ry="5" fill="#fff" opacity=".2"/>
+      <path d="M148 40 Q156 18 170 28" fill="none" stroke="#C5D0E8" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="172" cy="28" r="6" fill="#FF8A3D"/>
+    </svg>`;
+  }
+
+  function mountAstronaut(el, photo, suffix) {
+    if (!el) return;
+    el.innerHTML = astronautSVG(photo, suffix);
+  }
+
+  function updateTravelUI() {
+    if (!draft) return;
+    if (!isTravelText(draft.travel)) draft.travel = randomTravel();
+    const el = $("travel-preview");
+    if (el) el.textContent = draft.travel;
+  }
+
+  function readExplorerName() {
+    const el = $("explorer-name");
+    return el ? (el.value || "").trim().slice(0, 12) : "";
+  }
+
+  function explorerDisplayName(p) {
+    const n = p && String(p.explorerName || "").trim();
+    return n || "용감한 탐험가";
+  }
+
+  function isAppleTouch() {
+    return /iP(hone|ad|od)/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  function certFilename(name) {
+    const safe = String(name || "상상행성").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "_").slice(0, 24) || "상상행성";
+    return "행성발견증서_" + safe + ".png";
+  }
+
+  async function waitForFonts() {
+    try {
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      if (document.fonts && document.fonts.load) {
+        await Promise.all([
+          document.fonts.load("48px Jua"),
+          document.fonts.load("24px Jua"),
+          document.fonts.load('24px "Gothic A1"'),
+          document.fonts.load('700 24px "Gothic A1"')
+        ]);
+      }
+    } catch (e) { /* bundled fonts may already be ready */ }
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("이미지를 그리지 못했어요."));
+      img.src = src;
+    });
+  }
+
+  async function svgMarkupToImage(svg, w, h) {
+    let s = String(svg).trim();
+    if (!s.includes("xmlns=")) s = s.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+    if (w && h && !/\swidth=/.test(s)) s = s.replace("<svg", '<svg width="' + w + '" height="' + h + '"');
+    const blob = new Blob([s], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    try {
+      return await loadImage(url);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function fillWrapped(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+    const chars = Array.from(String(text || ""));
+    const lines = [];
+    let line = "";
+    for (const ch of chars) {
+      const next = line + ch;
+      if (ctx.measureText(next).width > maxWidth && line) {
+        lines.push(line);
+        line = ch;
+      } else {
+        line = next;
+      }
+    }
+    if (line) lines.push(line);
+    const used = maxLines ? lines.slice(0, maxLines) : lines;
+    used.forEach((ln, i) => ctx.fillText(ln, x, y + i * lineHeight));
+    return used.length * lineHeight;
+  }
+
+  async function drawAstronautOnCanvas(ctx, x, y, height, photo) {
+    const width = height * (200 / 280);
+    const svg = astronautSVG(null, "cert-draw-" + Math.floor(Math.random() * 1e6), { forCanvas: true });
+    const img = await svgMarkupToImage(svg, 800, 1120);
+    ctx.drawImage(img, x, y, width, height);
+    const sx = width / 200;
+    const sy = height / 280;
+    const cx = x + 100 * sx;
+    const cy = y + 86 * sy;
+    const r = 42 * Math.min(sx, sy);
+    if (photo) {
+      try {
+        const face = await loadImage(photo);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(face, cx - r, cy - r, r * 2, r * 2);
+        ctx.restore();
+      } catch (e) { /* keep default face */ }
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(x + 82 * sx, y + 70 * sy, 16 * sx, 10 * sy, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + 118 * sx, y + 78 * sy, 8 * sx, 5 * sy, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.22)";
+    ctx.fill();
+    ctx.restore();
+    return { width, height };
+  }
+
+  function drawGoldSeal(ctx, cx, cy, r) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = "#E8B423";
+    ctx.beginPath();
+    for (let i = 0; i < 28; i++) {
+      const a = (i / 28) * Math.PI * 2 - Math.PI / 2;
+      const rr = i % 2 === 0 ? r : r * 0.82;
+      if (i === 0) ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      else ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#A67C00";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.68, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFF3C4";
+    ctx.fill();
+    ctx.strokeStyle = "#C4920A";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#C4920A";
+    ctx.beginPath();
+    const sr = r * 0.16;
+    ctx.moveTo(0, -sr);
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + i * (Math.PI * 2 / 5);
+      const b = a + Math.PI / 5;
+      ctx.lineTo(Math.cos(a) * sr, Math.sin(a) * sr);
+      ctx.lineTo(Math.cos(b) * sr * 0.45, Math.sin(b) * sr * 0.45);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#6A4B00";
+    ctx.font = '700 18px "Gothic A1", sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("우주 탐험대", 0, r * 0.32);
+    ctx.restore();
+  }
+
+  async function renderCertificate(planet) {
+    if (!planet) throw new Error("행성이 없어요.");
+    await waitForFonts();
+    const W = 1600;
+    const H = 1131;
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    const seed = Array.from(String(planet.id || "p")).reduce((a, c) => a + c.charCodeAt(0), 0);
+    let s = seed + 1;
+    const rnd = () => {
+      s = (s * 1664525 + 1013904223) % 4294967296;
+      return s / 4294967296;
+    };
+
+    ctx.fillStyle = "#12102A";
+    ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 180; i++) {
+      const x = rnd() * W;
+      const y = rnd() * H;
+      const r = rnd() * 1.8 + 0.4;
+      ctx.fillStyle = "rgba(255,255,255," + (0.35 + rnd() * 0.6) + ")";
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const m = 46;
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = "#E8B423";
+    ctx.strokeRect(m, m, W - m * 2, H - m * 2);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#FFF3C4";
+    ctx.strokeRect(m + 18, m + 18, W - (m + 18) * 2, H - (m + 18) * 2);
+
+    ctx.fillStyle = "#F7F0DC";
+    const ix = m + 28;
+    const iy = m + 28;
+    const iw = W - (m + 28) * 2;
+    const ih = H - (m + 28) * 2;
+    ctx.fillRect(ix, iy, iw, ih);
+
+    ctx.strokeStyle = "#D4A017";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(ix + 16, iy + 16, iw - 32, ih - 32);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#E8C96A";
+    ctx.strokeRect(ix + 24, iy + 24, iw - 48, ih - 48);
+
+    ctx.fillStyle = "#2C4C9A";
+    ctx.font = "64px Jua, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText("새로운 행성 발견 증서", W / 2, iy + 44);
+    ctx.strokeStyle = "#D4A017";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 260, iy + 124);
+    ctx.lineTo(W / 2 + 260, iy + 124);
+    ctx.stroke();
+
+    const artW = 520;
+    const artH = 360;
+    const planetSvg = customArt(planet, "cert-pl", true);
+    const planetImg = await svgMarkupToImage(planetSvg, artW * 2, artH * 2);
+    const pLeft = ix + 50;
+    const pTop = iy + 160;
+    ctx.drawImage(planetImg, pLeft, pTop, artW, artH);
+
+    const astH = 340;
+    const astW = astH * (200 / 280);
+    await drawAstronautOnCanvas(ctx, pLeft + 140, pTop + 300, astH, planet.photo || null);
+
+    const tx = ix + 600;
+    const tw = iw - 640;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#1C2744";
+    ctx.font = "72px Jua, sans-serif";
+    fillWrapped(ctx, planet.name || "상상 행성", tx, iy + 168, tw, 78, 2);
+
+    ctx.font = '700 26px "Gothic A1", sans-serif';
+    ctx.fillStyle = "#6A4B00";
+    ctx.fillText("내가 만든 상상 행성", tx, iy + 330);
+
+    ctx.fillStyle = "#1C2744";
+    ctx.font = "36px Jua, sans-serif";
+    ctx.fillText("발견한 탐험가: " + explorerDisplayName(planet), tx, iy + 390);
+
+    const traits = [
+      "색깔: " + colorName(planet.color),
+      "크기: " + sizeName(planet.size),
+      "무늬: " + patternName(planet.pattern),
+      "달: " + (planet.moons ? planet.moons + "개" : "없어요"),
+      "날씨: " + stripForSpeech(tempInfo(planet.temp).card),
+      "누가 살까요: " + whoInfo(planet.who).card,
+      "가려면: " + (isTravelText(planet.travel) ? planet.travel : randomTravel())
+    ];
+    ctx.font = '700 28px "Gothic A1", sans-serif';
+    ctx.fillStyle = "#2A3148";
+    traits.forEach((line, i) => {
+      ctx.fillText(line, tx, iy + 460 + i * 42);
+    });
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#1C2744";
+    ctx.font = '700 28px "Gothic A1", sans-serif';
+    const vowY = H - 210;
+    ctx.fillText("위 탐험가는 우주에서 새로운 행성을 발견하였기에", W / 2 - 40, vowY);
+    ctx.fillText("이 증서를 드립니다.", W / 2 - 40, vowY + 40);
+
+    ctx.textAlign = "left";
+    ctx.font = '700 24px "Gothic A1", sans-serif';
+    ctx.fillStyle = "#4A3A18";
+    ctx.fillText("발견일: " + formatKoreanDate(planet.createdAt), ix + 56, H - 130);
+    ctx.fillText("증서 번호: " + (planet.certNo || makeCertNo(planet.createdAt)), ix + 56, H - 92);
+
+    drawGoldSeal(ctx, W - 200, H - 200, 78);
+
+    let blob;
+    try {
+      ctx.getImageData(0, 0, 1, 1);
+      blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("이미지로 바꾸지 못했어요."))), "image/png");
+      });
+    } catch (e) {
+      throw new Error("증서 그림을 저장할 수 없어요.");
+    }
+    const dataURL = canvas.toDataURL("image/png");
+    return {
+      canvas,
+      blob,
+      dataURL,
+      filename: certFilename(planet.name),
+      width: W,
+      height: H
+    };
+  }
+
+  let certState = { blob: null, dataURL: "", filename: "", url: "" };
+
+  function closeCertificate() {
+    hideOverlay("cert-overlay");
+    if (certState.url) {
+      URL.revokeObjectURL(certState.url);
+    }
+    certState = { blob: null, dataURL: "", filename: "", url: "" };
+    const img = $("cert-preview-img");
+    if (img) img.removeAttribute("src");
+  }
+
+  async function openCertificate(planet) {
+    if (!planet) return;
+    showToast("증서를 그리고 있어요…");
+    try {
+      const result = await renderCertificate(planet);
+      if (certState.url) URL.revokeObjectURL(certState.url);
+      const url = URL.createObjectURL(result.blob);
+      certState = { ...result, url };
+      const img = $("cert-preview-img");
+      img.alt = (planet.name || "행성") + " 발견 증서";
+      img.src = url;
+      $("cert-hint").hidden = !isAppleTouch();
+      hideToast();
+      showOverlay("cert-overlay");
+    } catch (e) {
+      showToast("증서를 만들지 못했어요. 다시 해 주세요.");
+    }
+  }
+
+  function draftAsPlanet() {
+    if (!draft) return null;
+    const name = (($("planet-name") && $("planet-name").value) || draft.name || "").trim().slice(0, 16) || "상상 행성";
+    const explorerName = readExplorerName();
+    if (!isTravelText(draft.travel)) draft.travel = randomTravel();
+    if (!draft.createdAt) draft.createdAt = new Date().toISOString();
+    if (!draft.certNo) draft.certNo = makeCertNo(draft.createdAt);
+    draft.name = name;
+    draft.explorerName = explorerName;
+    return normalizeCustom({
+      ...draft,
+      id: draft.id || "custom-preview",
+      name,
+      explorerName
+    });
+  }
+
+  async function saveCertificateFile() {
+    if (!certState.blob) return;
+    const filename = certState.filename || "행성발견증서.png";
+    const file = new File([certState.blob], filename, { type: "image/png" });
+    const canShare = typeof navigator.canShare === "function" && navigator.canShare({ files: [file] });
+    if (canShare) {
+      try {
+        await navigator.share({ files: [file], title: "새로운 행성 발견 증서" });
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+    }
+    if (isAppleTouch()) {
+      $("cert-hint").hidden = false;
+      return;
+    }
+    const a = document.createElement("a");
+    const url = URL.createObjectURL(certState.blob);
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+
   function bindUI() {
     $("btn-galaxy").addEventListener("click", () => openCard("galaxy"));
     $("btn-stamps").addEventListener("click", openAlbum);
@@ -1399,9 +1928,31 @@
     $("btn-preset-name").addEventListener("click", () => {
       $("planet-name").value = "우리 아이 행성";
     });
+    $("btn-preset-explorer").addEventListener("click", () => {
+      $("explorer-name").value = "우주 탐험가";
+      if (draft) draft.explorerName = "우주 탐험가";
+    });
+    $("explorer-name").addEventListener("input", () => {
+      if (draft) draft.explorerName = $("explorer-name").value.slice(0, 12);
+    });
+    $("btn-reroll-travel").addEventListener("click", () => {
+      if (!draft) return;
+      draft.travel = randomTravel();
+      updateTravelUI();
+    });
     $("planet-name").addEventListener("input", () => {
       if (draft) draft.name = $("planet-name").value.slice(0, 16);
     });
+    $("btn-card-cert").addEventListener("click", () => {
+      const p = customs.find((c) => c.id === openId);
+      if (p) openCertificate(p);
+    });
+    $("btn-builder-cert").addEventListener("click", () => {
+      const p = draftAsPlanet();
+      if (p) openCertificate(p);
+    });
+    $("btn-cert-download").addEventListener("click", saveCertificateFile);
+    $("btn-cert-close").addEventListener("click", closeCertificate);
     $("builder-opts").addEventListener("click", (e) => {
       const btn = e.target.closest("[data-k]");
       if (!btn) return;
@@ -1448,10 +1999,14 @@
         hideOverlay("builder-overlay");
       }
     });
+    $("cert-overlay").addEventListener("click", (e) => {
+      if (e.target === $("cert-overlay")) closeCertificate();
+    });
 
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
       if (!$("confirm-overlay").hidden) $("confirm-cancel").click();
+      else if (!$("cert-overlay").hidden) closeCertificate();
       else if (!$("card-overlay").hidden) closeCard();
       else if (!$("builder-overlay").hidden) {
         draft = null;
@@ -1483,11 +2038,21 @@
   function init() {
     buildStars();
     buildSystem();
+    persistGeneratedCustomFields();
     bindUI();
     updateVisitedMarks();
     showIntroIfNeeded();
     registerSW();
-    window.__kidsSpaceTest = { stripForSpeech, speechText, getBody, loadCustoms };
+    window.__kidsSpaceTest = {
+      stripForSpeech,
+      speechText,
+      getBody,
+      loadCustoms,
+      randomTravel,
+      isTravelText,
+      renderCertificate,
+      persistGeneratedCustomFields
+    };
   }
 
   if (document.readyState === "loading") {
